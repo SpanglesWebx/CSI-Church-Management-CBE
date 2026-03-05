@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8" />
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil&display=swap" rel="stylesheet">
+
+<style>
+@page {
+  size: A4;
+  margin: 10mm 14mm;
+}
+
+body {
+  margin: 0;
+  font-family: "Noto Sans Tamil", sans-serif;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/* HEADER */
+.header {
+  padding-top: 6mm;
+}
+
+.header h1 {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+}
+
+.title {
+  margin-top: 6px;
+}
+
+.hr {
+  border-top: 1px solid #000;
+  margin: 10px 0;
+}
+
+/* TABLE */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  font-weight: bold;
+  padding: 6px 4px;
+}
+
+.table thead tr {
+  border-bottom: 1px solid #000;
+}
+
+.table td {
+  padding: 6px 4px;
+}
+
+.center { text-align: center; }
+
+.section {
+  font-weight: bold;
+  padding-top: 10px;
+}
+
+/* Center only Date of Birth, Phone, Age columns */
+.table th:nth-child(4),
+.table th:nth-child(5),
+.table th:nth-child(6),
+.table td:nth-child(4),
+.table td:nth-child(5),
+.table td:nth-child(6) {
+  text-align: center !important;
+}
+
+
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h1>CSI CHRIST CHURCH 1558, TRICHY ROAD, COIMBATORE - 641018</h1>
+
+  <div class="title">
+    LIST OF BIRTHDAYS DURING {{MONTH_TITLE}}
+  </div>
+</div>
+
+<div class="hr"></div>
+
+<table class="table">
+<thead>
+<tr>
+  <th >SI.No</th>
+  <th >Member ID</th>
+  <th >Name</th>
+  <th >Date of Birth</th>
+  <th >Phone / Mobile No</th>
+  <th >Age</th>
+</tr>
+</thead>
+
+<tbody>
+<!--ROWS-->
+</tbody>
+
+</table>
+
+</body>
+</html>

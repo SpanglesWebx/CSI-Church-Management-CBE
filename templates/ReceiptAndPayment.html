@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil&display=swap" rel="stylesheet">
+
+<style>
+@page {
+  size: A4 landscape;
+  margin: 16mm 14mm;
+}
+
+body {
+  margin: 0;
+  font-family: "Noto Sans Tamil", sans-serif;
+  font-size: 11px;
+}
+
+.header {
+  text-align: center;
+  padding-top: 6mm;
+}
+
+.hr {
+  border-top: 1px solid #000;
+  margin: 10px 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead tr {
+  border-bottom: 1px solid #000;
+}
+
+.table th, .table td {
+  padding: 6px 4px;
+  text-align: center;
+}
+
+.right { text-align: right; }
+
+.section {
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h3>CSI CHRIST CHURCH</h3>
+  <h3>1558, TRICHY ROAD, COIMBATORE - 641018</h3>
+  <h3>GENERAL FUND A/C</h3>
+  <h3 class="title">
+    Receipts and Payments A/C for the Year : {{FROM_DATE}} - {{TO_DATE}}
+  </h3>
+</div>
+
+<div class="hr"></div>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th style="width:30%">RECEIPTS</th>
+      <th style="width:20%">AMOUNT</th>
+      <th style="width:30%">PAYMENTS</th>
+      <th style="width:20%">AMOUNT</th>
+    </tr>
+  </thead>
+
+  <tbody>
+
+    <tr>
+      <td class="section" colspan="4"></td>
+    </tr>
+
+    <!-- SAMPLE ROWS (inside HTML like your other reports) -->
+
+    <tr>
+      <td>Opening Cash</td>
+      <td class="right">50,000</td>
+      <td>Salary Paid</td>
+      <td class="right">30,000</td>
+    </tr>
+
+    <tr>
+      <td>Donations</td>
+      <td class="right">1,20,000</td>
+      <td>Electricity</td>
+      <td class="right">10,000</td>
+    </tr>
+
+  </tbody>
+</table>
+
+</body>
+</html>

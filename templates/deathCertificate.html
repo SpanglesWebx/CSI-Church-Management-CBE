@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  /* A4 page (no browser margin) */
+  @page { size: A4; margin: 0; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  /* Outer page area to simulate printable sheet */
+  .page {
+    width: 210mm;
+    height: 297mm;
+    padding: 12mm;           /* space from browser/paper edge */
+    box-sizing: border-box;
+    background: #fff;
+    font-family: "Times New Roman", Georgia, serif; /* closer to paper look */
+    color: #000;
+    font-size: 14px;        /* larger base text (you can tweak) */
+    line-height: 1.35;
+  }
+
+  /* printed border like your sample */
+  .outer-border {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #111;
+    box-sizing: border-box;
+    padding: 10mm 12mm;    /* inner spacing from border */
+    position: relative;    /* for absolute signature */
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .logo {
+    width: 78px;
+    height: 78px;
+    border: 1px solid #ddd; /* placeholder box for logo */
+    flex: 0 0 78px;
+  }
+
+  .center-header {
+    text-align: center;
+    flex: 1;
+  }
+
+  .center-header .church-name {
+    font-size: 18px;
+    letter-spacing: 2px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .center-header .sub {
+    margin: 2px 0;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* Title box exactly below heading */
+  .title-box {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 6px 18px;
+    border: 1px solid #111;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .6px;
+    background: rgba(0,0,0,0.02);
+  }
+
+  /* Horizontal divider under title area */
+.header-divider {
+  margin-top: 12px;
+  border-top: 1px solid #111;
+  margin-left: -12mm;   /* pull to left border */
+  margin-right: -12mm;  /* pull to right border */
+}
+
+  /* Top info row (Sl No / Issued On) */
+  .top-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding: 8px 2px;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  /* MAIN CONTENT: table layout */
+  .content {
+    margin-top: 8px;
+    /* let table grow to fill available vertical space */
+    flex: 1 1 auto;
+  }
+
+  table.details {
+    width: 100%;
+    border-collapse: collapse;
+    /* ensure rows have good vertical spacing */
+  }
+
+  table.details td {
+    vertical-align: top;
+    padding: 10px 6px; /* increased padding so content spreads vertically */
+    font-size: 14px;
+  }
+
+  /* column widths tuned to your scanned layout */
+  .col-number { width: 6%; font-weight:700; }
+  .col-label  { width: 38%; font-weight:700; }
+  .col-colon  { width: 3%; text-align:center; font-weight:700; }
+  .col-value  { width: 53%; }
+
+  /* Address block: reserve extra lines */
+  .address-block {
+    min-height: 72px;      /* leave space for multiple address lines */
+    line-height: 1.45;
+    white-space: normal; /* allow explicit line breaks */
+  }
+
+  /* bottom signature anchored inside the border */
+  .signature {
+    position: absolute;
+    right: 24mm;
+    bottom: 14mm;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  /* subtle smaller numbering on left to match original */
+  .row-number {
+    display:inline-block;
+    width: 100%;
+  }
+
+  /* small adjustments for printing */
+  @media print {
+    body, .page { background: #fff; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="outer-border">
+
+      <!-- HEADER -->
+      <div class="header">
+        <div class="logo" title="left logo placeholder">
+          <!-- Insert left logo here: <img src='left-logo.png' style='width:100%;height:100%;object-fit:contain'/> -->
+        </div>
+
+        <div class="center-header">
+          <div class="church-name">C S I CHRIST CHURCH</div>
+          <div class="sub">(COIMBATORE DIOCESE)</div>
+          <div class="sub">1558, TRICHY ROAD, COIMBATORE - 641018</div>
+          <div class="title-box">BURIAL CERTIFICATE</div>
+        </div>
+
+        <div class="logo" title="right logo placeholder">
+          <!-- Insert right logo here -->
+        </div>
+      </div>
+
+      <!-- divider -->
+      <div class="header-divider"></div>
+
+      <!-- top info -->
+      <div class="top-info">
+        <div>Sl No: {{SL_NO}}</div>
+        <div>Issued On: {{ISSUED_ON}}</div>
+      </div>
+
+      <!-- main content table - fills page -->
+      <div class="content">
+        <table class="details" role="presentation">
+          <tbody>
+            <tr>
+              <td class="col-number">1.</td>
+              <td class="col-label">Name of the Deceased</td>
+              <td class="col-colon">:</td>
+              <td class="col-value">{{NAME}}</td>
+            </tr>
+
+            <tr>
+              <td class="col-number">2.</td>
+              <td class="col-label">Father / Husband Name</td>
+              <td class="col-colon">:</td>
+              <td class="col-value">{{FATHER_HUSBAND}}</td>
+            </tr>
+
+            <tr>
+              <td class="col-number">3.</td>
+              <td class="col-label">Sex</td>
+              <td class="col-colon">:</td>
+              <td class="col-value">{{GENDER}}</td>
+            </tr>
+
+            <tr>
+              <td class="col-number">4.</td>
+              <td class="col-label">Date of Birth / Age</td>
+              <td class="col-colon">:</td>
+              <td class="col-value">{{DOB_AGE}}</td>
+            </tr>
+
+            <tr>
+              <td class="col-number">5.</td>
+              <td class="col-label">Aadhaar No</td>
+              <td class="col-colon">:</td>
+              <td class="col-value">{{AADHAAR}}</td>
+            </tr>
+
+            <tr>
+              <td class="col-number">6.</td>
+              <td class="col-label">Occupation</td>
+              <td class="col-colon">:</td>
+              <td class="col-value">{{OCCUPATION}}</td>
+            </tr>
+
+            <tr>
+              <td class="col-number">7.</td>
+              <td class="col-label">Address</td>
+              <td class="col-colon">:</td>
+              <td class="col-value address-block">
+                {{ADDRESS_LINE1}}<br/>
+                {{ADDRESS_LINE2}}<br/>
+                {{ADDRESS_LINE3}}<br/>
+                {{CITY}}  {{PIN}}
+                <!-- The address-block reserves space; leave empty lines if not used,
+                     or replace with explicit newlines: "Line1\nLine2\nLine3" -->
+              </td>
+            </tr>
+
+            <tr>
+              <td class="col-number">8.</td>
+              <td class="col-label">Place of Death</td>
+              <td class="col-colon">:</td>
+              <td class="col-value">{{PLACE_OF_DEATH}}</td>
+            </tr>
+
+            <tr>
+              <td class="col-number">9.</td>
+              <td class="col-label">Died On</td>
+              <td class="col-colon">:</td>
+              <td class="col-value">{{DIED_ON}}</td>
+            </tr>
+
+            <tr>
+              <td class="col-number">10.</td>
+              <td class="col-label">Cause of Death</td>
+              <td class="col-colon">:</td>
+              <td class="col-value">{{CAUSE_OF_DEATH}}</td>
+            </tr>
+
+            <tr>
+              <td class="col-number">11.</td>
+              <td class="col-label">Place of Burial</td>
+              <td class="col-colon">:</td>
+              <td class="col-value">{{PLACE_OF_BURIAL}}</td>
+            </tr>
+
+            <tr>
+              <td class="col-number">12.</td>
+              <td class="col-label">Buried On</td>
+              <td class="col-colon">:</td>
+              <td class="col-value">{{BURIED_ON}}</td>
+            </tr>
+
+            <tr>
+              <td class="col-number">13.</td>
+              <td class="col-label">Buried By</td>
+              <td class="col-colon">:</td>
+              <td class="col-value">{{BURIED_BY}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Signature anchored to bottom-right inside border -->
+      <div class="signature">Signature of the Presbyter</div>
+
+    </div> <!-- outer-border -->
+  </div> <!-- page -->
+</body>
+</html>

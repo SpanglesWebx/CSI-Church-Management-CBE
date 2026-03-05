@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+@page { size: legal landscape; margin: 10mm 10mm 4mm 10mm; }
+
+body {
+  font-family: "Times New Roman", Times, serif;   /* 👈 MAIN FONT */
+  font-size: 16px;
+}
+
+/* Keep table data uppercase */
+td {
+  text-transform: uppercase;
+}
+
+/* Only dynamic data in bottom section should be uppercase */
+.data-uppercase {
+  text-transform: uppercase;
+}
+
+
+.container {
+  width: 100%;
+}
+
+/* HEADER */
+.title-box {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.church-title {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* ===== BIG REGISTER TABLE ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  border: 1px solid black;
+  font-family: Arial, sans-serif;
+}
+
+/* All cells */
+th, td {
+  font-family: Arial, sans-serif;
+  border: 1px solid black;
+  padding: 6px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* Column widths similar to your printed sheet */
+.col-small { width: 6%; }      /* S.No */
+.col-mid { width: 9%; }        /* When Married */
+.col-name { width: 14%; }      /* Christian Name */
+.col-surname { width: 10%; }   /* Surname */
+.col-age { width: 12%; }       /* Age/DOB */
+.col-condition { width: 8%; }
+.col-prof { width: 10%; }
+.col-residence { width: 18%; }
+.col-father { width: 14%; }
+.col-banns { width: 9%; }
+
+/* Make rows taller to fill the page */
+.person-row td {
+  height: 90px;   /* <-- increased to push content down */
+}
+
+/* Bottom text line */
+.married-line {
+  margin-top: 6px;
+  font-size: 16px;
+}
+
+/* ===== THREE COLUMN BOTTOM LAYOUT ===== */
+.bottom-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Default for center & right */
+.bottom-col {
+  width: 30%;
+  font-size: 16px;
+}
+
+/* WIDER LEFT COLUMN */
+.bottom-col.left {
+  width: 40%;
+}
+
+/* ===== PLACE & DATE SHOULD STAY NORMAL FONT ===== */
+.place-date {
+  font-family: Arial, sans-serif;  /* 👈 NORMAL FONT */
+}
+
+
+/* Right side alignment */
+.right-align {
+  text-align: right;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- HEADER -->
+<div class="title-box">
+  <div class="church-title">
+    TRUE EXTRACT FROM THE REGISTER BOOK OF MARRIAGE  
+    Maintained by C.S.I CHRIST CHURCH, 1553, TRICHY ROAD,
+  </div>
+  <div class="church-title">COIMBATORE – 641018</div>
+  <br/>
+  <div class="church-title">UNDER SECTION 62 OF ACT XV OF 1872</div>
+</div><br/>
+
+<!-- MAIN REGISTER TABLE -->
+<table>
+
+<colgroup>
+  <col class="col-small">
+  <col class="col-mid">
+  <col class="col-name">
+  <col class="col-surname">
+  <col class="col-age">
+  <col class="col-condition">
+  <col class="col-prof">
+  <col class="col-residence">
+  <col class="col-father">
+  <col class="col-banns">
+</colgroup>
+
+<!-- HEADER ROW 1 -->
+<tr>
+  <th rowspan="2">S.No</th>
+  <th rowspan="2">When Married</th>
+  <th colspan="2">Names of the Parties</th>
+  <th rowspan="2">Age / DOB</th>
+  <th rowspan="2">Condition</th>
+  <th rowspan="2">Rank of Profession</th>
+  <th rowspan="2">Residence at the time of Marriage</th>
+  <th rowspan="2">Father’s Name and Surname</th>
+  <th rowspan="2">By Banns or Licence</th>
+</tr>
+
+<!-- HEADER ROW 2 -->
+<tr>
+  <th>Christian Name</th>
+  <th>Surname</th>
+</tr>
+
+<!-- GROOM ROW -->
+<tr class="person-row">
+  <td rowspan="2">{{REGISTER_NO}}</td>
+<td rowspan="2" style="line-height:1.4;">
+  {{WEDDING_DATE_NUM}}<br/><br/>
+  {{WEDDING_DATE_WORD}}<br/>
+  {{WEDDING_YEAR}}<br/>
+  ({{WEDDING_DAY}})
+</td>
+
+  <td>{{GROOM_NAME}}</td>
+  <td>—</td>
+
+  <td>
+    {{GROOM_AGE}}<br/><br/>
+    {{GROOM_DOB}}
+  </td>
+  <td>—</td>
+  <td>{{GROOM_PROFESSION}}</td>
+  <td>{{GROOM_ADDRESS}}</td>
+  <td>{{GROOM_FATHER}}</td>
+
+  <td rowspan="2">{{BANNS_OR_LICENSE}}</td>
+</tr>
+
+<!-- BRIDE ROW -->
+<tr class="person-row">
+  <td>{{BRIDE_NAME}}</td>
+  <td>—</td>
+
+  <td>
+    {{BRIDE_AGE}}<br/><br/>
+    {{BRIDE_DOB}}
+  </td>
+  <td>—</td>
+  <td>{{BRIDE_PROFESSION}}</td>
+  <td>{{BRIDE_ADDRESS}}</td>
+  <td>{{BRIDE_FATHER}}</td>
+</tr>
+
+</table>
+<br/>
+<!-- Married line -->
+<div class="married-line">
+Married in the <b>C S I CHRIST CHURCH, 1558, TRICHY ROAD, COIMBATORE - 641018</b>
+by the Episcopally Ordained Presbyter <b>{{PASTOR_NAME}}</b>
+</div>
+<br/><br/><br/>
+<!-- ========== BOTTOM SECTION (3 COLUMN) ========== -->
+<div class="bottom-flex">
+
+  <!-- LEFT COLUMN -->
+<div class="bottom-col left" 
+     style="display:grid; grid-template-columns: 30% 70%; row-gap:6px; font-size:16px;">
+
+  <!-- Row 1 -->
+  <div>This marriage</div>
+  <div class="data-uppercase">(Sd) {{GROOM_NAME}}</div>
+
+  <!-- Row 2 -->
+  <div>was solemnized</div>
+  <div></div>
+
+  <!-- Row 3 -->
+  <div>between us on</div>
+  <div></div>
+
+  <!-- Row 4 -->
+  <div>{{WEDDING_DATE}}</div>
+  <div class="data-uppercase">(Sd) {{BRIDE_NAME}}</div>
+<br/><br/><br/>
+  <!-- Place & Date full width -->
+  <div class="place-date" style="grid-column:1 / span 2; margin-top:8px;">
+    <b>Place :</b> TRICHY ROAD, COIMBATORE <br/><br/>
+    <b>Date :</b> {{DOWNLOAD_DATE}}
+  </div>
+
+</div>
+
+
+
+
+  <!-- CENTER COLUMN — WITNESSES -->
+<!-- CENTER COLUMN — WITNESSES (CLEAN CSS INDENT) -->
+<div class="bottom-col" style="font-size:16px;">
+
+<b>Witnesses :</b><br/><br/>
+
+<div class="data-uppercase">
+{{WITNESSES_BLOCK}}
+</div>
+
+</div>
+
+
+  <!-- RIGHT COLUMN — PASTOR -->
+    <div class="bottom-col right-align">
+    <div class="data-uppercase">(Sd) {{PASTOR_NAME}}, {{PASTOR_QUALIFICATION}}</div>
+    {{PASTOR_ROLE}} <br/>
+    Marriage Registrar, <span class="data-uppercase">{{PASTOR_RESPONSIBILITY}}</span>
+    </div>
+
+</div>
+
+</div>
+</body>
+</html>

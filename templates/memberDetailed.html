@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil&display=swap" rel="stylesheet">
+
+<style>
+/* ===============================
+   A4 PAGE SETUP
+================================ */
+@page {
+  size: A4;
+  margin: 16mm 14mm;
+}
+
+
+/* ======== FORCE FULL A4 HEIGHT LIKE PRINT ======== */
+.page-wrapper {
+  height: 297mm;
+  width: 210mm;
+  box-sizing: border-box;
+}
+
+/* Make middle content stretch */
+.content-area {
+  flex-grow: 1;
+}
+
+
+body {
+  margin: 0;
+  font-family: "Noto Sans Tamil", sans-serif;
+  font-size: 14px;
+  line-height: 1.35;
+  color: #000;
+}
+
+/* FIXED SPACE FOR LONG FIELDS */
+.fixed-box {
+  min-height: 17mm;      /* reserve space in advance */
+  max-height: 17mm;      /* never grow beyond this */
+  overflow: hidden;      /* stops layout breaking */
+  white-space: normal;   /* allow wrapping */
+  word-break: break-word;
+  display: block;
+}
+
+
+/* ===============================
+   HEADER
+================================ */
+.header {
+  text-align: center;
+  position: relative;
+  padding-top: 6mm;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 0.6px;
+}
+
+.header p {
+  margin: 2px 0;
+  font-size: 14px;
+}
+
+.header .title {
+  margin-top: 6px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* ===============================
+   PHOTO (TOP RIGHT)
+================================ */
+.photo {
+  position: absolute;
+  top: 12mm;
+  right: 1mm;
+  width: 26mm;
+  height: 26mm;
+  border: 1px solid #000;
+}
+
+
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ===============================
+   HORIZONTAL RULE
+================================ */
+.section-divider {
+  height: 0;
+  border-top: 1px solid #000;
+  margin: 8mm 0;
+}
+
+
+/* ======= TOP BASIC INFO (PRINT STYLE) ======= */
+.basic-grid {
+  display: grid;
+  grid-template-columns: 40mm 1fr 30mm 1fr; 
+  row-gap: 6px;
+  column-gap: 1mm;
+}
+
+/* Make labels right-aligned so colon aligns */
+.basic-label {
+  font-weight: bold;
+  text-align: right;
+}
+
+/* Values start neatly after colon */
+.basic-value {
+  padding-left: 2mm;
+}
+
+
+/* ===============================
+   FORM ROWS (REGISTER STYLE)
+================================ */
+
+.row {
+  display: flex;
+  align-items: baseline;
+  margin: 6px 0;
+}
+
+.label {
+  width: 38%;
+  font-weight: bold;
+}
+
+.value {
+  width: 62%;
+}
+
+/* two values on same line */
+.inline {
+  display: flex;
+  gap: 24px;
+}
+
+.inline .pair {
+  display: flex;
+  gap: 6px;
+}
+
+.print-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;   /* 🔥 THIS FIXES POSITION */
+}
+
+.print-table td {
+  border: 1px solid #000;
+  padding: 4px 6px;
+  vertical-align: middle;
+  height: 12mm;          /* 🔥 FIXED ROW HEIGHT */
+  font-size: 13px;
+}
+
+.print-label {
+  width: 35%;
+  font-weight: bold;
+  background: #f9f9f9;
+}
+
+.print-value {
+  width: 65%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis; /* 🔥 long text won’t break layout */
+}
+
+.wrap-text {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+
+
+/* ===============================
+   SMALL TEXT
+================================ */
+.small {
+  font-size: 11px;
+}
+</style>
+</head>
+
+<body>
+<div class="page-wrapper">
+
+<!-- HEADER -->
+<div class="header">
+  <h1>CSI CHRIST CHURCH</h1>
+  <p>1588, TRICHY ROAD, COIMBATORE - 641018</p><br/>
+  <div class="title">BIO-DATA</div>
+
+  <div class="photo">{{PHOTO}}</div>
+</div>
+
+<div class="section-divider"></div>
+
+
+<div class="content-area">
+
+<!-- BASIC INFO -->
+<div class="basic-grid">
+
+  <!-- LINE 1 -->
+  <div class="basic-label">Memb No and Name :</div>
+  <div class="basic-value">{{ID}} {{NAME}}</div>
+  <div class="basic-label">Family No :</div>
+  <div class="basic-value">{{FAMILY_ID}}</div>
+
+  <!-- LINE 2 -->
+  <div class="basic-label">Head of the Family :</div>
+  <div class="basic-value" style="grid-column: 2 / span 3;">
+    {{HEAD}}
+  </div>
+
+  <!-- LINE 3 -->
+  <div class="basic-label">Father’s Name :</div>
+  <div class="basic-value">{{FATHER}}</div>
+  <div class="basic-label">Mother’s Name :</div>
+  <div class="basic-value">{{MOTHER}}</div>
+
+</div>
+
+
+<div class="section-divider"></div>
+
+<!-- ADDRESS -->
+<!-- ADDRESS (PRINT-STYLE GRID — SAME AS BASIC INFO) -->
+<div class="basic-grid">
+
+  <div class="basic-label">Residential Address :</div>
+
+  <div class="basic-value wrap-text fixed-box"
+       style="grid-column: 2 / span 3; 
+              ">
+    {{ADDR}}
+  </div>
+
+  <div class="basic-label">Primary Contact No:</div>
+  <div class="basic-value">{{primary_contact_number}}</div>
+  <div class="basic-label">Contact Nos :</div>
+  <div class="basic-value">{{CONTACT}}</div>
+  <div class="basic-label">E-Mail :</div>
+  <div class="basic-value">{{EMAIL}}</div>
+
+  <div class="basic-label">WebSite :</div>
+  <div class="basic-value">-</div>
+  <div class="basic-label">Official Address :</div>
+  <div class="basic-value" style="grid-column: 2 / span 3;">{{OFFADDR}}</div>
+
+  <div class="basic-label">Contact Nos :</div>
+  <div class="basic-value" style="grid-column: 2 / span 3;">
+    {{OFFCONTACT}}
+  </div>
+
+</div>
+
+<div class="section-divider"></div>
+
+<!-- PERMANENT + HOME CHURCH — SAME STYLE -->
+<div class="basic-grid">
+
+  <div class="basic-label">Permanent Address :</div>
+  <div class="basic-value wrap-text fixed-box" style="grid-column: 2 / span 3;">
+    {{PERADDR}}
+  </div>
+
+  <div class="basic-label">Home Church :</div>
+  <div class="basic-value" style="grid-column: 2 / span 3;">
+    {{HOMECHURCH}}
+  </div>
+
+</div>
+
+<div class="section-divider"></div>
+
+<!-- PERSONAL DETAILS -->
+<!-- PERSONAL DETAILS — 3 COLUMN PRINT GRID -->
+<div class="basic-grid" 
+     style="grid-template-columns: 40mm 1fr 30mm 1fr 30mm 1fr; row-gap:6px;">
+
+  <!-- ROW 1 -->
+  <div class="basic-label">Date of Birth :</div>
+  <div class="basic-value">{{DOB}}</div>
+
+  <div class="basic-label">Place of Birth :</div>
+  <div class="basic-value" style="grid-column: 4 / span 3;">
+    {{POB}}
+  </div>
+
+  <!-- ROW 2 -->
+  <div class="basic-label">Sex :</div>
+  <div class="basic-value">{{SEX}}</div>
+
+  <div class="basic-label">Marital Status :</div>
+  <div class="basic-value">{{MARITAL}}</div>
+
+  <div class="basic-label">Blood Group :</div>
+  <div class="basic-value">{{BLOOD}}</div>
+
+  <!-- ROW 3 -->
+  <div class="basic-label">Profession :</div>
+  <div class="basic-value">{{PROFESSION}}</div>
+
+  <div class="basic-label"></div>
+  <div class="basic-value"></div>
+
+  <div class="basic-label">Qualification :</div>
+  <div class="basic-value">{{QUAL}}</div>
+
+</div>
+
+<div class="section-divider"></div>
+
+<!-- CHURCH RECORDS -->
+<!-- CHURCH RECORDS — 3 COLUMN PRINT GRID -->
+<div class="basic-grid"
+     style="grid-template-columns: 40mm 1fr 14mm 1fr 30mm 1fr; row-gap:6px;">
+
+  <!-- ROW 1 — CONFIRMATION -->
+  <div class="basic-label">Confirmation Date :</div>
+  <div class="basic-value">{{CONFDATE}}</div>
+
+  <div class="basic-label">Place :</div>
+  <div class="basic-value fixed-box">{{CONFPLACE}}</div>
+
+  <div class="basic-label">By Whom :</div>
+  <div class="basic-value">{{confirmation_by}}</div>
+
+  <!-- ROW 2 — BAPTISM -->
+  <div class="basic-label">Baptism Date :</div>
+  <div class="basic-value">{{BAPDATE}}</div>
+
+  <div class="basic-label">Place :</div>
+  <div class="basic-value fixed-box">{{BAPPLACE}}</div>
+
+  <div class="basic-label">By Whom :</div>
+  <div class="basic-value">{{baptism_by}}</div>
+
+  <!-- ROW 3 — MARRIAGE -->
+  <div class="basic-label">Marriage Date :</div>
+  <div class="basic-value">{{MARDATE}}</div>
+
+  <div class="basic-label">Place :</div>
+  <div class="basic-value" style="grid-column: 4 / span 3;">
+    {{MARPLACE}}
+  </div>
+
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ========== MEMBERSHIP & IDENTIFICATION ========== -->
+
+<!-- ROW 1 — Three columns -->
+<div class="basic-grid"
+     style="grid-template-columns: 40mm 1fr 14mm 1fr 30mm 1fr; row-gap:6px;">
+
+  <div class="basic-label">Membership From :</div>
+  <div class="basic-value">{{MEMFROM}}</div>
+
+  <div class="basic-label">Status :</div>
+  <div class="basic-value">{{STATUS}}</div>
+
+  <div class="basic-label">Category :</div>
+  <div class="basic-value">{{CATEGORY}}</div>
+
+</div>
+
+</div>
+
+</div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+

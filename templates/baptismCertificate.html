@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+
+<style>
+@page { 
+  size: legal landscape; 
+  margin: 12mm;   /* normal margin so it prints cleanly */
+}
+
+body {
+  font-family: Arial, sans-serif;
+  font-size: 16px;   /* slightly reduced to prevent overflow */
+}
+
+/* HEADER LIKE YOUR IMAGE */
+.header {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 12px;
+  font-size: 26px;
+  font-family: "Times New Roman", Times, serif; 
+}
+
+/* TABLE LIKE YOUR REGISTER */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  height: auto;   /* ❗ REMOVE vh-based height */
+}
+
+th, td {
+  border: 1px solid black;
+  padding: 6px;  
+  vertical-align: top;
+  font-size: 16px;
+}
+td {
+  text-transform: uppercase;
+}
+
+/* COLUMN WIDTHS (UNCHANGED) */
+.col-sn { width: 8%; }
+.col-baptism-date { width: 10%; }
+.col-born { width: 10%; }
+.col-name { width: 16%; }
+.col-sex { width: 6%; }
+.col-parents { width: 20%; }
+.col-prof { width: 8%; }
+.col-god { width: 10%; }
+.col-place { width: 8%; }
+.col-by { width: 6%; }
+
+/* BIG ROW FOR ADDRESS — reduced so it fits on one page
+.big-row td {
+  height: 360px;  
+  
+}*/
+
+.big-row td {
+  height: 305px;
+  padding-top: 50px;   /* <-- use this instead of margin-top */
+  vertical-align: top;
+}
+
+/* CERTIFICATE TEXT AREA */
+.cert-text {
+  margin-top: 12px;
+  margin-left: 50px;
+  font-size: 18px;
+  line-height: 1.5;
+  font-family: "Times New Roman", Times, serif;  
+}
+
+
+/* BOTTOM AREA */
+.bottom-row {
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+}
+
+.place-date {
+  margin-top: 6px;
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.label {
+  width: 60px;        /* FIXED WIDTH = perfect alignment */
+  font-weight: bold;
+}
+
+.value {
+  margin-left: 6px;
+  text-transform: uppercase;
+}
+
+
+.presbyter {
+  text-align: right;
+  font-size: 16px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+  CSI CHRIST CHURCH, 1558, TRICHY ROAD, COIMBATORE - 641018<br/><br/>
+  CERTIFICATE OF BAPTISM
+</div><br/>
+
+<table>
+<tr>
+  <th class="col-sn">Sl.No</th>
+  <th class="col-baptism-date">Date of Baptism</th>
+  <th class="col-born">Said to be Born</th>
+  <th class="col-name">Name of the Child</th>
+  <th class="col-sex">Sex</th>
+  <th class="col-parents">Parents Name and Address</th>
+  <th class="col-prof">Parent's Profession</th>
+  <th class="col-god">God Parents</th>
+  <th class="col-place">Place of Baptism</th>
+  <th class="col-by">Baptized by</th>
+</tr>
+
+<tr class="big-row">
+  <td><center>{{BAPTISM_ID}}</center></td>
+  <td><center>{{BAPTISM_DATE}}</center></td>
+  <td><center>{{DOB}}</center></td>
+  <td>{{NAME}}</td>
+  <td><center>{{SEX}}</center></td>
+  <td>
+    Mr {{FATHER}}<br/><br/>
+    Mrs {{MOTHER}}<br/><br/>
+    {{ADDRESS}}
+  </td>
+  <td>{{PROFESSION}}</td>
+  <td>{{GOD_PARENTS}}</td>
+  <td>{{BAPTISM_PLACE}}</td>
+  <td>{{BAPTISED_BY}}</td>
+</tr>
+</table>
+
+<!-- CERTIFICATE TEXT (ONLY IF ISSUED_BY EXISTS) -->
+<br/>
+<div class="cert-text">
+  {{CERT_LINE}}
+</div>
+<br/><br/>
+<div class="bottom-row">
+
+  <div class="place-date">
+    <div class="line">
+      <span class="label">Place</span> :
+      <span class="value">TRICHY ROAD, COIMBATORE</span>
+    </div>
+<br/>
+    <div class="line">
+      <span class="label">Date</span> :
+      <span class="value">{{DOWNLOAD_DATE}}</span>
+    </div>
+  </div>
+
+  <div class="presbyter">
+    <strong>Presbyter </strong>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+  <meta charset="UTF-8" />
+
+  <style>
+    @page {
+      size: A4;
+      margin: 20mm;          /* OUTER margin like image 1 */
+    }
+
+    body {
+      font-family: "Noto Sans Tamil", sans-serif;
+      font-size: 12px;
+      margin: 0;
+      background: white;
+    }
+
+    /* ===== INNER FRAME (THIS CREATES THE WHITE BORDER YOU WANT) ===== */
+    .page-wrapper {
+      padding: 10mm;         /* INNER padding */
+      box-sizing: border-box;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: #6c5ce7;
+      color: white;
+      padding: 8px;
+      text-align: left;
+    }
+
+    td {
+      padding: 6px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .info-box {
+      margin-bottom: 15px;
+      text-align: center;
+    }
+  </style>
+
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="page-wrapper">
+
+  <div class="info-box">
+    <h3>Members – Age Category Report</h3>
+<p>
+  <b>Age:</b> {{AGE_TEXT}}
+</p>
+    <p><b>Total Members:</b> {{TOTAL_COUNT}}</p>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Sl No</th>
+        <th>Member ID</th>
+        <th>Member Name</th>
+        <th>Age</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <!--ROWS-->
+    </tbody>
+  </table>
+
+</div>
+
+<script>
+  const from = "{{FROM_AGE}}";
+  const to = "{{TO_AGE}}";
+
+  const span = document.getElementById("age-range");
+
+  if (to === "null" || to === "" || to === "Only") {
+    span.textContent = " ";
+  } else {
+    span.textContent = " to " + to;
+  }
+</script>
+
+</body>
+</html>

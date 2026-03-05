@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil&display=swap" rel="stylesheet">
+
+<style>
+@page {
+  size: A4;
+  margin: 10mm 6mm;
+}
+
+body {
+  margin: 0;
+  font-family: "Noto Sans Tamil", sans-serif;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #000;
+}
+
+/* HEADER */
+.header {
+  text-align: center;
+  padding-top: 6mm;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 0.6px;
+}
+
+.header p {
+  margin: 2px 0;
+  font-size: 10px;
+}
+
+.header .title {
+  margin-top: 6px;
+  font-weight: bold;
+  letter-spacing: 0.8px;
+}
+
+/* SINGLE TOP LINE ONLY */
+.hr {
+  border-top: 1px solid #000;
+  margin: 10px 0;
+}
+
+/* TABLE STYLE – NO INNER LINES */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: center;
+  font-weight: bold;
+  padding: 6px 4px;
+}
+
+/* Only bottom line under header row */
+.table thead tr {
+  border-bottom: 1px solid #000;
+}
+
+.table td {
+  padding: 6px 4px;
+  text-align: center;
+}
+
+.right {
+  text-align: right !important;
+}
+
+.left {
+  text-align: left !important;
+}
+
+.section {
+  font-weight: bold;
+  margin-top: 10px;
+  font-size: 12px !important;
+}
+
+.grand-total {
+  font-weight: bold;
+  border-top: 2px solid #000;
+  border-bottom: 2px solid #000;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>CSI CHRIST CHURCH</h1>
+  <h1>1558, TRICHY ROAD, COIMBATORE - 641018</h1>
+  <div class="title">
+    GENERAL FUND A/C - DEPRECIATION STATEMENT FOR THE YEAR : {{FROM_DATE}} - {{TO_DATE}}
+  </div>
+</div>
+
+<div class="hr"></div>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th style="width:18%">PARTICULARS</th>
+      <th style="width:10%">W.D.V AS ON <br/>{{FROM_DATE}}</th>
+      <th style="width:10%">ADDITIONS</th>
+      <th style="width:10%">DELETIONS</th>
+      <th style="width:12%">GROSS BLOCK</th>
+      <th style="width:10%">DEPR. RATE</th>
+      <th style="width:12%">DEPR. AMOUNT</th>
+      <th style="width:12%">W.D.V AS ON <br/>{{TO_DATE}}</th>
+    </tr>
+  </thead>
+
+  <tbody>
+
+<!--ROWS-->
+
+  </tbody>
+</table>
+
+</body>
+</html>
