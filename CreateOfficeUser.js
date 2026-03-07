@@ -1,16 +1,16 @@
-// CreateAdminUser.js
+// createofficeuserUser.js
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-const User = require("./Schema/adminlogSchema");
+const User = require("./Schema/adminlogSchema");  // adjust path if needed
 require("dotenv").config();
 
 // ----------------- CONFIG -----------------
-const ADMIN_USERNAME = "WebXAdmin";
-const ADMIN_PASSWORD = "Spangles2016";
-const ADMIN_EMAIL = "webxspangles@gmail.com";
+const ADMIN_USERNAME = "WebxOfficeWorker";
+const ADMIN_PASSWORD = "Admin@123";
+const ADMIN_EMAIL = "webxspangles@gmail.com"; // any email, no OTP needed
 // -------------------------------------------
 
-async function createAdmin() {
+async function createofficeuser() {
   try {
     await mongoose.connect(process.env.MONGO_URL);
 
@@ -30,10 +30,10 @@ async function createAdmin() {
 
     const adminUser = new User({
       member_id: ADMIN_USERNAME,
-      member_name: "Super Admin",
+      member_name: "Webx Worker",
       email: ADMIN_EMAIL,
       password: hashedPassword,
-      roles: ["admin", "churchofficeworker"],
+      roles: ["churchofficeworker"],
       isPreCreated: false,
     });
 
@@ -50,4 +50,4 @@ async function createAdmin() {
   }
 }
 
-createAdmin();
+createofficeuser();

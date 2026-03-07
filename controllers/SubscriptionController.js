@@ -821,46 +821,89 @@ exports.getSubscriptionReport = async (req, res) => {
 
 // Add to your SubscriptionController.js
 
+// exports.getSingleSubscriptionReport = async (req, res) => {
+//   try {
+//     const { member_id } = req.params;
+//     const { date } = req.query; // ⭐ receive date
+
+//     const subscriptions = await Subscription.find({ member_id });
+
+//     if (!subscriptions.length) {
+//       return res.status(404).json({ message: "No subscription found" });
+//     }
+
+//     const member = await Member.findOne({ member_id });
+
+//     const months = [
+//       "april","may","june","july","august","september",
+//       "october","november","december","january","february","march"
+//     ];
+
+//     let paidMonths = [];
+//     let selectedDate = date ? new Date(date).toISOString().slice(0,10) : null;
+
+//     subscriptions.forEach(sub => {
+//       months.forEach(month => {
+//         const record = sub[month];
+
+//         if (record?.allocations?.length) {
+//           record.allocations.forEach(a => {
+//             const allocDate = new Date(a.date).toISOString().slice(0,10);
+
+//             if (!selectedDate || allocDate === selectedDate) {
+//               paidMonths.push({
+//                 month,
+//                 year: sub.year,
+//                 ...a.toObject()
+//               });
+//             }
+//           });
+//         }
+//       });
+//     });
+
+//     res.json({
+//       memberInfo: {
+//         member_id,
+//         member_name: subscriptions[0].member_name,
+//         address: member?.present_address || "",
+//         pincode: member?.present_pincode || ""
+//       },
+//       paidMonths
+//     });
+
+//   } catch (err) {
+//     res.status(500).json({ message: "Failed" });
+//   }
+// };
+
 exports.getSingleSubscriptionReport = async (req, res) => {
   try {
     const { member_id } = req.params;
-    const { date } = req.query; // ⭐ receive date
 
-    const subscriptions = await Subscription.find({ member_id });
+    const [member, subscriptions] = await Promise.all([
+      Member.findOne({ member_id }).select("present_address present_pincode"),
+      Subscription.aggregate([
+        { $match: { member_id } },
+        { $sort: { year: -1 } },
+        {
+          $project: {
+            member_id: 1,
+            member_name: 1,
+            year: 1,
+            total_received: 1,
+            april: 1, may: 1, june: 1, july: 1,
+            august: 1, september: 1, october: 1,
+            november: 1, december: 1, january: 1,
+            february: 1, march: 1
+          }
+        }
+      ])
+    ]);
 
     if (!subscriptions.length) {
       return res.status(404).json({ message: "No subscription found" });
     }
-
-    const member = await Member.findOne({ member_id });
-
-    const months = [
-      "april","may","june","july","august","september",
-      "october","november","december","january","february","march"
-    ];
-
-    let paidMonths = [];
-    let selectedDate = date ? new Date(date).toISOString().slice(0,10) : null;
-
-    subscriptions.forEach(sub => {
-      months.forEach(month => {
-        const record = sub[month];
-
-        if (record?.allocations?.length) {
-          record.allocations.forEach(a => {
-            const allocDate = new Date(a.date).toISOString().slice(0,10);
-
-            if (!selectedDate || allocDate === selectedDate) {
-              paidMonths.push({
-                month,
-                year: sub.year,
-                ...a.toObject()
-              });
-            }
-          });
-        }
-      });
-    });
 
     res.json({
       memberInfo: {
@@ -869,14 +912,14 @@ exports.getSingleSubscriptionReport = async (req, res) => {
         address: member?.present_address || "",
         pincode: member?.present_pincode || ""
       },
-      paidMonths
+      subscriptions
     });
 
   } catch (err) {
-    res.status(500).json({ message: "Failed" });
+    console.error(err);
+    res.status(500).json({ message: "Failed to load report" });
   }
 };
-
 
 
 

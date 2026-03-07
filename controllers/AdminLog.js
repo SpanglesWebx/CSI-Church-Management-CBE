@@ -89,7 +89,7 @@ exports.checkMember = async (req, res) => {
 
   }
 
-  const targetEmail = member.primary_email || member.email;
+  const targetEmail = member.primary_email;
 
   if (!targetEmail)
    return res.status(400).json({
@@ -178,7 +178,7 @@ if (mode !== "forgot") {
     });
 
 // Use PRIMARY EMAIL first
-const targetEmail = member.primary_email || member.email;
+const targetEmail = member.primary_email;
 
 if (!targetEmail)
   return res.status(400).json({
@@ -247,7 +247,7 @@ exports.completeSignup = async (req, res) => {
         // Hash new password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-const targetEmail = member.primary_email || member.email;
+const targetEmail = member.primary_email;
 
 if (!targetEmail) {
   return res.status(400).json({
@@ -275,7 +275,7 @@ await user.save();
     const hashedPassword = await bcrypt.hash(password, 10);
 
 // Use PRIMARY EMAIL first
-const targetEmail = member.primary_email || member.email;
+const targetEmail = member.primary_email;
 
 if (!targetEmail) {
   return res.status(400).json({
@@ -416,7 +416,7 @@ if (user.roles.includes("treasurer")) {
    await Member.findOne({ member_id: user.member_id }) ||
    await Pastor.findOne({ member_id: user.member_id });
 
-  const targetEmail = member.primary_email || member.email;
+  const targetEmail = member.primary_email;
 
   if (!targetEmail)
    return res.status(400).json({
