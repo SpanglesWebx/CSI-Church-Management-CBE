@@ -5,9 +5,9 @@ const User = require("./Schema/adminlogSchema");
 require("dotenv").config();
 
 // ----------------- CONFIG -----------------
-const ADMIN_USERNAME = "WebXAdmin";
-const ADMIN_PASSWORD = "Spangles2016";
-const ADMIN_EMAIL = "webxspangles@gmail.com";
+const ADMIN_USERNAME = "";
+const ADMIN_PASSWORD = "";
+const ADMIN_EMAIL = "";
 // -------------------------------------------
 
 async function createAdmin() {

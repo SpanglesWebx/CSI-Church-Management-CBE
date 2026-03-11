@@ -127,7 +127,7 @@ exports.addCemPayment = async (req, res) => {
     const counter = await Counter.findOneAndUpdate(
       { name: "cem-payment" },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true }
+      { returnDocument: "after", upsert: true }
     );
 
     const autoExpenseId =
@@ -145,7 +145,7 @@ exports.addCemPayment = async (req, res) => {
     const transCounter = await ReceiptTransCounter.findOneAndUpdate(
       { dateKey: `CEMPAY-${dateKey}` }, // ✅ important
       { $inc: { seq: 1 } },
-      { new: true, upsert: true }
+      { returnDocument: "after", upsert: true }
     );
 
     // format → P0001

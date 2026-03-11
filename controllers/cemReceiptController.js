@@ -80,7 +80,7 @@ exports.addCemReceipt = async (req, res) => {
     const counter = await Counter.findOneAndUpdate(
       { name: "cem-receipt" }, // ✅ separate counter
       { $inc: { seq: 1 } },
-      { new: true, upsert: true }
+      { returnDocument: "after", upsert: true }
     );
 
     const autoReceiptId = "CEMREC" + String(counter.seq).padStart(4, "0");
@@ -97,7 +97,7 @@ const dateKey = new Date(receiptDate)
 const transCounter = await ReceiptTransCounter.findOneAndUpdate(
   { dateKey: `CEM-${dateKey}` }, // ✅ important prefix
   { $inc: { seq: 1 } },
-  { new: true, upsert: true }
+  { returnDocument: "after", upsert: true }
 );
 
 // format → 0001

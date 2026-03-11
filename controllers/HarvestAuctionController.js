@@ -1,6 +1,8 @@
 const HarvestAuction = require("../Schema/HarvestAuction");
 const HarvestAuctionPayment = require("../Schema/HarvestAuctionPayment");
 const HarvestItem = require("../Schema/HarvestItem");
+const Journal = require("../Schema/JournalSchema");
+const Counter = require("../Schema/CounterSchema");
 
 
 // Utility to build buyer-wise report
@@ -66,13 +68,116 @@ async function buildBuyerSummary({ buyerId, buyerPhone }) {
 }
 
 // ➤ Add Harvest Auction
+// exports.addHarvestAuction = async (req, res) => {
+//   try {
+//     const auction = new HarvestAuction(req.body);
+//     await auction.save();
+//     res.status(201).json(auction);
+//   } catch (err) {
+//     res.status(500).json({ message: "Failed to add Harvest Auction", error: err.message });
+//   }
+// };
+
 exports.addHarvestAuction = async (req, res) => {
   try {
     const auction = new HarvestAuction(req.body);
     await auction.save();
+
+    /* =====================================
+       CREATE JOURNAL ENTRY
+    ====================================== */
+
+    const {
+      date,
+      amount,
+      buyerId,
+      buyerName,
+      buyerPhone,
+      item,
+    } = req.body;
+
+    /* ---------- JOURNAL COUNTER ---------- */
+
+    const counter = await Counter.findOneAndUpdate(
+      { name: "journal" },
+      { $inc: { seq: 1 } },
+      { returnDocument: "after", upsert: true }
+    );
+
+    const autoJournalId = "JRN" + String(counter.seq).padStart(4, "0");
+
+    /* ---------- DATE-WISE TRANS NO ---------- */
+
+    const journalDate = new Date(date);
+    journalDate.setHours(0, 0, 0, 0);
+
+    const lastJournal = await Journal.findOne({
+      date: {
+        $gte: journalDate,
+        $lt: new Date(journalDate.getTime() + 24 * 60 * 60 * 1000),
+      },
+    })
+      .sort({ transNo: -1 })
+      .lean();
+
+    let nextSeq = 1;
+
+    if (lastJournal?.transNo) {
+      const lastNumber = parseInt(lastJournal.transNo.replace("J", ""), 10);
+      nextSeq = lastNumber + 1;
+    }
+
+    const transNo = "J" + String(nextSeq).padStart(4, "0");
+
+    /* ---------- CREATE JOURNAL ---------- */
+
+    await Journal.create({
+      autoJournalId,
+      transNo,
+      date,
+
+      accType: "Credit",
+
+      creditorId: buyerId || "",
+      creditorName: buyerName || "",
+      creditorPhone: buyerPhone || "",
+
+      headerLedger: {
+        key: "I0022",
+        ledgerCode: "I0022",
+        ledgerName: "Harvest Income Through Auction",
+        categoryName: "Harvest",
+        accountType: "Income",
+        incomeType: "NON_ASSESSABLE",
+      },
+
+      entries: [
+        {
+          type: "Debit",
+          ledger: {
+            key: "L0008",
+            ledgerCode: "L0008",
+            ledgerName: "Auction Balance",
+            categoryName: "Loans & Advances",
+            accountType:
+              "Liabilities-Current Liabilities and Provisions",
+            incomeType: "NON_ASSESSABLE",
+          },
+          amount: amount,
+          description: item, // 👈 Item name as description
+        },
+      ],
+
+      totalAmount: amount,
+    });
+
     res.status(201).json(auction);
   } catch (err) {
-    res.status(500).json({ message: "Failed to add Harvest Auction", error: err.message });
+    console.error("Auction error:", err);
+    res.status(500).json({
+      message: "Failed to add Harvest Auction",
+      error: err.message,
+    });
   }
 };
 

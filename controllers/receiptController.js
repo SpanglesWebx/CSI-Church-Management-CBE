@@ -103,7 +103,7 @@ exports.addReceipt = async (req, res) => {
     const counter = await Counter.findOneAndUpdate(
       { name: "receipt" },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true }
+      { returnDocument: "after", upsert: true }
     );
 
     const autoReceiptId = "REC" + String(counter.seq).padStart(4, "0");
@@ -120,7 +120,7 @@ exports.addReceipt = async (req, res) => {
     const transCounter = await ReceiptTransCounter.findOneAndUpdate(
       { dateKey },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true }
+      { returnDocument: "after", upsert: true }
     );
 
     // format → 0001, 0002...
@@ -422,7 +422,7 @@ exports.getReceiptList = async (req, res) => {
         memberName: 1,
         nonMemberName: 1,
       })
-        .sort({ receiptDate: 1 })
+        .sort({ autoReceiptId: 1 })
         .skip(skip)
         .limit(Number(limit)),
       Receipt.countDocuments(query),
@@ -1143,11 +1143,12 @@ exports.getReceiptDownloadData = async (req, res) => {
     })
       .sort({ receiptDate: 1 })
       .select(
-        "receiptDate transNo receiptLines totalAmount paymentMethod bankName"
+        "autoReceiptId receiptDate transNo receiptLines totalAmount paymentMethod bankName"
       );
 
     const formatted = receipts.map((rec, index) => ({
       slNo: index + 1,
+      autoReceiptId: rec.autoReceiptId,
       date: rec.receiptDate,
       transNo: rec.transNo,
       receiptNumbers: (rec.receiptLines || [])

@@ -17,6 +17,20 @@ const JournalEntrySchema = new mongoose.Schema(
       accountType: String,
       incomeType: String,
     },
+    creditorId: {
+      type: String,
+      default: "",
+    },
+
+    creditorName: {
+      type: String,
+      default: "",
+    },
+
+    creditorPhone: {
+      type: String,
+      default: "",
+    },
 
     amount: {
       type: Number,

@@ -114,6 +114,27 @@ exports.addChurchExpense = async (req, res) => {
       await cash.save();
     }
 
+    /* ==================================================
+🔵 BANK PAYMENT (DEDUCT BANK IMMEDIATELY)
+================================================== */
+
+if (paymentMethod === "Cheque" && bankId) {
+
+  const bank = await Bank.findById(bankId);
+
+  if (!bank || bank.current_balance < finalAmount) {
+    return res.status(400).json({
+      status: "Failed",
+      message: "Insufficient bank balance",
+    });
+  }
+
+  // 🔥 deduct immediately
+  bank.current_balance -= finalAmount;
+
+  await bank.save();
+}
+
     /* ================================================
     🔵 HANDLE CASH → BANK / BANK → BANK TRANSFER
  ================================================ */
@@ -153,7 +174,7 @@ exports.addChurchExpense = async (req, res) => {
     const counter = await Counter.findOneAndUpdate(
       { name: "expense" },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true }
+      { returnDocument: "after", upsert: true }
     );
 
     const autoExpenseId =
@@ -237,40 +258,6 @@ exports.addChurchExpense = async (req, res) => {
       createdBy: req.user?._id,
     });
 
-    /* ==================================================
-   🔥 CREATE BRS FOR CHEQUE / UPI EXPENSE
-================================================== */
-
-    // if (paymentMethod === "Cheque" || paymentMethod === "UPI") {
-    //   await BankRecon.create({
-    //     receiptId: expense._id, // reuse same field
-    //     autoReceiptId: expense.autoExpenseId,
-    //     receiptDate: new Date(date),
-
-    //     paymentMethod:
-    //       paymentMethod === "Cheque" ? "Cheque" : "UPI Payment",
-
-    //     chequeNumber,
-    //     chequeDate: chequeDate ? new Date(chequeDate) : null,
-    //     upiId,
-
-    //     bankId,
-    //     bankName,
-
-    //     partyName: inFavourOf || creditorName || "Expense",
-    //     phone: creditorPhone || "",
-
-    //     amount: Number(finalAmount),
-    //     drCr: "Credit",
-
-    //     realised: false,
-    //     realisedDate: null,
-    //   });
-    // }
-
-    /* ==================================================
-       🔥 CREATE BRS FOR CHEQUE / UPI EXPENSE
-    ================================================== */
     if (paymentMethod === "Cheque" || paymentMethod === "UPI") {
 
       // 🔹 party priority
@@ -359,12 +346,17 @@ exports.getChurchExpenses = async (req, res) => {
     const query = {};
 
     // 🔍 Search by subcategory (Payment For)
-    if (search) {
-      query.ledgerName = {
-        $regex: search,
-        $options: "i",
-      };
-    }
+    // 🔍 Global search
+if (search) {
+  const searchNumber = Number(search);
+
+  query.$or = [
+    { autoExpenseId: { $regex: search, $options: "i" } }, // Payment ID
+    { transNo: { $regex: search, $options: "i" } },       // Trans No
+    { "expenseLines.ledgerName": { $regex: search, $options: "i" } }, // Payment For
+    ...(isNaN(searchNumber) ? [] : [{ totalAmount: searchNumber }]) // Amount
+  ];
+}
 
     // 📅 Date filter
     if (startDate || endDate) {
@@ -586,7 +578,7 @@ exports.updateChurchExpense = async (req, res) => {
     const updatedExpense = await ChurchExpense.findByIdAndUpdate(
       id,
       updateData,
-      { new: true, session }
+      { returnDocument: "after", session }
     );
 
     // ====================================================

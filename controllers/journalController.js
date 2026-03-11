@@ -9,8 +9,8 @@ exports.addJournal = async (req, res) => {
       accType,
       headerLedger,
       creditorId,
-  creditorName,
-  creditorPhone,
+      creditorName,
+      creditorPhone,
       entries,
       totalAmount,
     } = req.body;
@@ -23,7 +23,7 @@ exports.addJournal = async (req, res) => {
     const counter = await Counter.findOneAndUpdate(
       { name: "journal" },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true }
+      { returnDocument: "after", upsert: true }
     );
 
     const autoJournalId = "JRN" + String(counter.seq).padStart(4, "0");
@@ -32,28 +32,28 @@ exports.addJournal = async (req, res) => {
    ⭐ DATE-WISE JOURNAL TRANS NO (J0001...)
 ================================================== */
 
-// normalize date (remove time)
-const journalDate = new Date(date);
-journalDate.setHours(0, 0, 0, 0);
+    // normalize date (remove time)
+    const journalDate = new Date(date);
+    journalDate.setHours(0, 0, 0, 0);
 
-// find last journal for same date
-const lastJournal = await Journal.findOne({
-  date: {
-    $gte: journalDate,
-    $lt: new Date(journalDate.getTime() + 24 * 60 * 60 * 1000),
-  },
-})
-  .sort({ transNo: -1 })
-  .lean();
+    // find last journal for same date
+    const lastJournal = await Journal.findOne({
+      date: {
+        $gte: journalDate,
+        $lt: new Date(journalDate.getTime() + 24 * 60 * 60 * 1000),
+      },
+    })
+      .sort({ transNo: -1 })
+      .lean();
 
-let nextSeq = 1;
+    let nextSeq = 1;
 
-if (lastJournal?.transNo) {
-  const lastNumber = parseInt(lastJournal.transNo.replace("J", ""), 10);
-  nextSeq = lastNumber + 1;
-}
+    if (lastJournal?.transNo) {
+      const lastNumber = parseInt(lastJournal.transNo.replace("J", ""), 10);
+      nextSeq = lastNumber + 1;
+    }
 
-const transNo = "J" + String(nextSeq).padStart(4, "0");
+    const transNo = "J" + String(nextSeq).padStart(4, "0");
 
 
     const journal = await Journal.create({
@@ -62,8 +62,8 @@ const transNo = "J" + String(nextSeq).padStart(4, "0");
       date,
       accType,
       creditorId,
-  creditorName,
-  creditorPhone,
+      creditorName,
+      creditorPhone,
       headerLedger,
       entries,
       totalAmount,
@@ -133,7 +133,7 @@ exports.getJournalList = async (req, res) => {
 
     const [data, total] = await Promise.all([
       Journal.find(query)
-        .select("autoJournalId date accType headerLedger creditorName totalAmount")
+        .select("autoJournalId transNo date accType headerLedger creditorName totalAmount")
         .sort({ autoJournalId: -1 })
         .skip(skip)
         .limit(Number(limit))
@@ -165,5 +165,102 @@ exports.getJournalById = async (req, res) => {
     res.json({ data: journal });
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch journal" });
+  }
+};
+
+exports.updateJournalById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      date,
+      accType,
+      headerLedger,
+      creditorId,
+      creditorName,
+      creditorPhone,
+      entries,
+      totalAmount,
+    } = req.body;
+
+    if (!date || !accType || !entries?.length || !totalAmount) {
+      return res.status(400).json({
+        message: "Required fields missing",
+      });
+    }
+
+    const journal = await Journal.findById(id);
+
+    if (!journal) {
+      return res.status(404).json({
+        message: "Journal not found",
+      });
+    }
+
+    /* --------------------------------
+       If DATE changed → recalc transNo
+    ----------------------------------*/
+
+    let transNo = journal.transNo;
+
+    const oldDate = new Date(journal.date);
+    oldDate.setHours(0, 0, 0, 0);
+
+    const newDate = new Date(date);
+    newDate.setHours(0, 0, 0, 0);
+
+    if (oldDate.getTime() !== newDate.getTime()) {
+      const lastJournal = await Journal.findOne({
+        date: {
+          $gte: newDate,
+          $lt: new Date(newDate.getTime() + 24 * 60 * 60 * 1000),
+        },
+        _id: { $ne: id },
+      })
+        .sort({ transNo: -1 })
+        .lean();
+
+      let nextSeq = 1;
+
+      if (lastJournal?.transNo) {
+        const lastNumber = parseInt(
+          lastJournal.transNo.replace("J", ""),
+          10
+        );
+        nextSeq = lastNumber + 1;
+      }
+
+      transNo = "J" + String(nextSeq).padStart(4, "0");
+    }
+
+    /* --------------------------------
+       Update Journal
+    ----------------------------------*/
+
+    const updatedJournal = await Journal.findByIdAndUpdate(
+      id,
+      {
+        date,
+        accType,
+        creditorId,
+        creditorName,
+        creditorPhone,
+        headerLedger,
+        entries,
+        totalAmount,
+        transNo,
+      },
+      { new: true }
+    );
+
+    res.json({
+      message: "Journal updated successfully",
+      data: updatedJournal,
+    });
+  } catch (err) {
+    console.error("Update journal error:", err);
+    res.status(500).json({
+      message: "Failed to update journal",
+    });
   }
 };

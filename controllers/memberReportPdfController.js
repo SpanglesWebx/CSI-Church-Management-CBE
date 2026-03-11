@@ -51,7 +51,45 @@ exports.downloadBirthdayReportPDF = async (req, res) => {
 
     if (status !== "All") pipeline.push({ $match: { status } });
 
-    const members = await Member.aggregate(pipeline).sort({ md: 1 });
+pipeline.push(
+  {
+    $addFields: {
+      trimmed_name: {
+        $trim: { input: "$member_name" }
+      }
+    }
+  },
+  {
+    $addFields: {
+      first_char: { $substrCP: ["$trimmed_name", 0, 1] }
+    }
+  },
+  {
+    $addFields: {
+      priority: {
+        $switch: {
+          branches: [
+            {
+              case: { $regexMatch: { input: "$first_char", regex: /^[A-Za-z]/ } },
+              then: 1
+            },
+            {
+              case: { $regexMatch: { input: "$first_char", regex: /^[0-9]/ } },
+              then: 2
+            }
+          ],
+          default: 3
+        }
+      }
+    }
+  }
+);
+
+const members = await Member.aggregate(pipeline).sort({
+  md: 1,
+  priority: 1,
+  trimmed_name: 1
+});
 
     const template = fs.readFileSync(path.join(__dirname, "../templates/birthdayReport.html"), "utf8");
 

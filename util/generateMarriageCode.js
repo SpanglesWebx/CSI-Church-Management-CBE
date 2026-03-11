@@ -9,7 +9,7 @@ exports.generateMarriageCode = async () => {
   const counter = await MrgIdCounter.findOneAndUpdate(
     { key: "MARRIAGE_REG" },
     { $inc: { seq: 1 } },
-    { new: true, upsert: true }
+    { returnDocument: "after", upsert: true }
   );
 
   const sequence = counter.seq;

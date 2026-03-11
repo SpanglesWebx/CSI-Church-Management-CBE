@@ -6,6 +6,7 @@ const CemBank = require("../Schema/cemBankSchema");
 const CemReceipt = require("../Schema/CemReceiptSchema");
 const CemPayment = require("../Schema/CemPaymentSchema");
 const CashAccount = require("../Schema/CashAccountSchema");
+const WomenBank = require("../Schema/WomenBankSchema");
 
 
 exports.realiseBankEntry = async (req, res) => {
@@ -23,7 +24,8 @@ exports.realiseBankEntry = async (req, res) => {
 
     const isCem = autoId.startsWith("CEM");
     const isExpense =
-      autoId.startsWith("PAY") || autoId.startsWith("CEMPAY");
+      autoId.startsWith("PAY") || autoId.startsWith("CEMPAY") || autoId.startsWith("WPAY");
+    const isWomen = autoId.startsWith("WREC") || autoId.startsWith("WPAY");
 
     /* ==================================================
        ✅ REALISE
@@ -43,6 +45,9 @@ exports.realiseBankEntry = async (req, res) => {
 
       if (isCem) {
         bank = await CemBank.findById(entry.bankId);
+      }
+      else if (isWomen) {
+        bank = await WomenBank.findById(entry.bankId);
       } else {
         bank = await Bank.findById(entry.bankId);
       }
@@ -51,61 +56,43 @@ exports.realiseBankEntry = async (req, res) => {
         return res.status(404).json({ message: "Bank not found" });
       }
 
-      // 🔴 EXPENSE → reduce bank
-      // if (isExpense) {
-      //   if (bank.current_balance < Number(entry.amount)) {
-      //     return res.status(400).json({
-      //       message: "Insufficient bank balance",
-      //     });
-      //   }
+      if (isExpense) {
 
-      //   bank.current_balance -= Number(entry.amount);
-      // }
 
-      // 🔴 EXPENSE → reduce bank
-if (isExpense) {
-  if (bank.current_balance < Number(entry.amount)) {
-    return res.status(400).json({
-      message: "Insufficient bank balance",
-    });
-  }
+        /* ==================================================
+           🔥 HANDLE BANK → CASH TRANSFER (VERY IMPORTANT)
+        ================================================== */
 
-  bank.current_balance -= Number(entry.amount);
+        try {
+          // detect source document
+          let expenseDoc = null;
 
-  /* ==================================================
-     🔥 HANDLE BANK → CASH TRANSFER (VERY IMPORTANT)
-  ================================================== */
+          if (autoId.startsWith("PAY")) {
+            expenseDoc = await ChurchExpense.findById(entry.receiptId).lean();
+          } else if (autoId.startsWith("CEMPAY")) {
+            expenseDoc = await CemPayment.findById(entry.receiptId).lean();
+          }
 
-  try {
-    // detect source document
-    let expenseDoc = null;
+          if (expenseDoc?.expenseLines?.length) {
+            const cashLine = expenseDoc.expenseLines.find(
+              (l) => l.ledgerCategoryName === "Cash A/C"
+            );
 
-    if (autoId.startsWith("PAY")) {
-      expenseDoc = await ChurchExpense.findById(entry.receiptId).lean();
-    } else if (autoId.startsWith("CEMPAY")) {
-      expenseDoc = await CemPayment.findById(entry.receiptId).lean();
-    }
+            if (cashLine) {
+              const cashAccount = await CashAccount.findOne({
+                account_type: cashLine.ledgerName, // ✅ Petty Cash A/c
+              });
 
-    if (expenseDoc?.expenseLines?.length) {
-      const cashLine = expenseDoc.expenseLines.find(
-        (l) => l.ledgerCategoryName === "Cash A/C"
-      );
-
-      if (cashLine) {
-        const cashAccount = await CashAccount.findOne({
-          account_type: cashLine.ledgerName, // ✅ Petty Cash A/c
-        });
-
-        if (cashAccount) {
-          cashAccount.current_balance += Number(cashLine.amount);
-          await cashAccount.save();
+              if (cashAccount) {
+                cashAccount.current_balance += Number(cashLine.amount);
+                await cashAccount.save();
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Cash transfer adjust error:", err);
         }
       }
-    }
-  } catch (err) {
-    console.error("Cash transfer adjust error:", err);
-  }
-}
       // 🟢 RECEIPT → increase bank
       else {
         bank.current_balance += Number(entry.amount);
@@ -129,14 +116,41 @@ if (isExpense) {
 
       // 🔴 CHURCH EXPENSE
       if (isChurchExpense) {
-        await ChurchExpense.findByIdAndUpdate(entry.receiptId, {
-          expenseReturned: true,
-          expenseReturnDate: returnDate
-            ? new Date(returnDate)
-            : null,
-          expenseReturnReason: returnReason || "",
-        });
-      }
+
+const expense = await ChurchExpense.findById(entry.receiptId).lean();
+
+if (expense?.bankId) {
+  const bank = await Bank.findById(expense.bankId);
+
+  if (bank) {
+    bank.current_balance += Number(entry.amount);
+    await bank.save();
+  }
+}
+
+/* 🔥 REVERSE PETTY CASH IF TRANSFER */
+
+const cashLine = expense?.expenseLines?.find(
+  (l) => l.ledgerCategoryName === "Cash A/C"
+);
+
+if (cashLine) {
+  const cashAccount = await CashAccount.findOne({
+    account_type: cashLine.ledgerName,
+  });
+
+  if (cashAccount) {
+    cashAccount.current_balance -= Number(cashLine.amount);
+    await cashAccount.save();
+  }
+}
+
+await ChurchExpense.findByIdAndUpdate(entry.receiptId, {
+  expenseReturned: true,
+  expenseReturnDate: returnDate ? new Date(returnDate) : null,
+  expenseReturnReason: returnReason || "",
+});
+}
 
       // 🟢 CHURCH RECEIPT
       else if (isChurchReceipt) {
@@ -184,65 +198,6 @@ if (isExpense) {
   }
 };
 
-// exports.getBankReconList = async (req, res) => {
-//   try {
-//     const { bankId, method, search = "", tab, startDate, endDate } = req.query;
-
-//     const query = {
-//       realised: false,
-//       returned: false,
-//     };
-
-//     // 🔥 TAB FILTERING
-//     if (tab === "Add") {
-//       // 🟢 only receipts
-//       query.autoReceiptId = { $regex: "^REC" };
-//     }
-
-//     if (tab === "Less") {
-//       // 🔴 only expenses
-//       query.autoReceiptId = { $regex: "^PAY" };
-//     }
-
-//     // 📅 DATE FILTER
-//     if (startDate || endDate) {
-//       query.receiptDate = {};
-
-//       if (startDate) {
-//         query.receiptDate.$gte = new Date(startDate);
-//       }
-
-//       if (endDate) {
-//         // include full end day
-//         const end = new Date(endDate);
-//         end.setHours(23, 59, 59, 999);
-//         query.receiptDate.$lte = end;
-//       }
-//     }
-
-
-
-//     if (bankId) query.bankId = bankId;
-//     if (method && method !== "All") query.paymentMethod = method;
-
-//     if (search) {
-//       query.$or = [
-//         { autoReceiptId: { $regex: search, $options: "i" } },
-//         { partyName: { $regex: search, $options: "i" } },
-//         { chequeNumber: { $regex: search, $options: "i" } },
-//         { upiId: { $regex: search, $options: "i" } },
-//       ];
-//     }
-
-//     const data = await BankRecon.find(query)
-//       .sort({ receiptDate: -1 })
-//       .lean();
-
-//     res.status(200).json({ data });
-//   } catch (err) {
-//     res.status(500).json({ message: "Failed to fetch BRS" });
-//   }
-// };
 exports.getBankReconList = async (req, res) => {
   try {
     const { bankId, method, search = "", tab, startDate, endDate } = req.query;
@@ -261,6 +216,7 @@ exports.getBankReconList = async (req, res) => {
       query.$or = [
         { autoReceiptId: { $regex: "^REC" } },     // church receipt
         { autoReceiptId: { $regex: "^CEMREC" } },  // cemetery receipt
+        { autoReceiptId: { $regex: "^WREC" } },
       ];
     }
 
@@ -269,6 +225,7 @@ exports.getBankReconList = async (req, res) => {
       query.$or = [
         { autoReceiptId: { $regex: "^PAY" } },      // church payment
         { autoReceiptId: { $regex: "^CEMPAY" } },   // cemetery payment
+        { autoReceiptId: { $regex: "^WPAY" } },
       ];
     }
 

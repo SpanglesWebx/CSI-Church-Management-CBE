@@ -1,5 +1,6 @@
 const Creditor = require("../Schema/CreditorSchema");
 const Member = require("../Schema/memberSchema");
+const Staff = require("../Schema/staffSchema");
 
 // Escape regex to prevent injection
 const escapeRegex = (text = "") =>
@@ -136,6 +137,76 @@ exports.searchByPhone = async (req, res) => {
   }
 };
 
+// exports.searchCreditorsUnified = async (req, res) => {
+//   try {
+//     const { query } = req.query;
+//     if (!query) return res.json({ data: [] });
+
+//     const safeQuery = escapeRegex(query.trim());
+
+//     const isNumeric = /^[0-9]+$/.test(query);
+//     const regexAnywhere = new RegExp(safeQuery, "i");
+//     const regexStartsWith = new RegExp("^" + safeQuery, "i");
+
+//     const creditorConditions = [];
+//     const memberConditions = [];
+
+//     // 🔹 Phone search
+//     if (isNumeric) {
+//       creditorConditions.push({ primary_contact_number: regexStartsWith });
+//       memberConditions.push({ primary_contact_number: regexStartsWith });
+//     }
+
+//     // 🔹 ID or Name search
+//     creditorConditions.push(
+//       { creditor_id: regexAnywhere },
+//       { name: regexAnywhere }
+//     );
+
+//     memberConditions.push(
+//       { member_id: regexAnywhere },
+//       { member_name: regexAnywhere }
+//     );
+
+//     const [creditors, members] = await Promise.all([
+//       Creditor.find({ $or: creditorConditions })
+//         .select("creditor_id name primary_contact_number")
+//         .limit(10)
+//         .lean(),
+
+//       Member.find({ $or: memberConditions })
+//         .select("member_id member_name primary_contact_number")
+//         .limit(10)
+//         .lean()
+//     ]);
+
+//     const results = [];
+
+//     creditors.forEach(c => {
+//       results.push({
+//         id: c.creditor_id,
+//         name: c.name,
+//         phone: c.primary_contact_number || ""
+//       });
+//     });
+
+//     members.forEach(m => {
+//       results.push({
+//         id: m.member_id,
+//         name: m.member_name,
+//         phone: m.primary_contact_number || ""
+//       });
+//     });
+
+//     res.json({ data: results });
+
+//   } catch (err) {
+//     console.error("Unified creditor search error:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+
 exports.searchCreditorsUnified = async (req, res) => {
   try {
     const { query } = req.query;
@@ -149,25 +220,39 @@ exports.searchCreditorsUnified = async (req, res) => {
 
     const creditorConditions = [];
     const memberConditions = [];
+    const staffConditions = [];
 
     // 🔹 Phone search
     if (isNumeric) {
       creditorConditions.push({ primary_contact_number: regexStartsWith });
       memberConditions.push({ primary_contact_number: regexStartsWith });
+
+      staffConditions.push(
+        { phone: regexStartsWith },
+        { non_member_phone: regexStartsWith }
+      );
     }
 
-    // 🔹 ID or Name search
+    // 🔹 Creditor search
     creditorConditions.push(
       { creditor_id: regexAnywhere },
       { name: regexAnywhere }
     );
 
+    // 🔹 Member search
     memberConditions.push(
       { member_id: regexAnywhere },
       { member_name: regexAnywhere }
     );
 
-    const [creditors, members] = await Promise.all([
+    // 🔹 Staff search
+    staffConditions.push(
+      { employee_id: regexAnywhere },
+      { member_name: regexAnywhere },
+      { non_member_name: regexAnywhere }
+    );
+
+    const [creditors, members, staffs] = await Promise.all([
       Creditor.find({ $or: creditorConditions })
         .select("creditor_id name primary_contact_number")
         .limit(10)
@@ -176,11 +261,19 @@ exports.searchCreditorsUnified = async (req, res) => {
       Member.find({ $or: memberConditions })
         .select("member_id member_name primary_contact_number")
         .limit(10)
+        .lean(),
+
+      Staff.find({ $or: staffConditions })
+        .select(
+          "employee_id member_name phone non_member_name non_member_phone"
+        )
+        .limit(10)
         .lean()
     ]);
 
     const results = [];
 
+    // 🔹 Creditors
     creditors.forEach(c => {
       results.push({
         id: c.creditor_id,
@@ -189,11 +282,21 @@ exports.searchCreditorsUnified = async (req, res) => {
       });
     });
 
+    // 🔹 Members
     members.forEach(m => {
       results.push({
         id: m.member_id,
         name: m.member_name,
         phone: m.primary_contact_number || ""
+      });
+    });
+
+    // 🔹 Staff
+    staffs.forEach(s => {
+      results.push({
+        id: s.employee_id,
+        name: s.member_name || s.non_member_name,
+        phone: s.phone || s.non_member_phone || ""
       });
     });
 

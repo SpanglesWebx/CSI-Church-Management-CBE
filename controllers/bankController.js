@@ -152,32 +152,43 @@ exports.getAllActiveBanks = async (req, res) => {
 // 📌 Get ALL banks (Normal + Cemetery) for BRS dropdown
 exports.getAllBanksCombined = async (req, res) => {
   try {
-    const [banks, cemBanks] = await Promise.all([
+    const [banks, cemBanks, womenBanks] = await Promise.all([
       Bank.find({ status: "Active" })
         .select("_id bank_name account_number ledger_code")
         .lean(),
 
-      // 🔥 cemetery banks
       require("../Schema/cemBankSchema")
+        .find({ status: "Active" })
+        .select("_id bank_name account_number ledger_code")
+        .lean(),
+
+      require("../Schema/WomenBankSchema")
         .find({ status: "Active" })
         .select("_id bank_name account_number ledger_code")
         .lean(),
     ]);
 
-    // ✅ tag source (VERY IMPORTANT for future safety)
+    // Church Banks
     const normalTagged = banks.map((b) => ({
       ...b,
       bankType: "Church",
     }));
 
+    // Cemetery Banks
     const cemTagged = cemBanks.map((b) => ({
       ...b,
       bankType: "Cemetery",
     }));
 
-    // ✅ merge + sort
-    const combined = [...normalTagged, ...cemTagged].sort((a, b) =>
-      a.bank_name.localeCompare(b.bank_name)
+    // Women Banks
+    const womenTagged = womenBanks.map((b) => ({
+      ...b,
+      bankType: "Women",
+    }));
+
+    // Merge all
+    const combined = [...normalTagged, ...cemTagged, ...womenTagged].sort(
+      (a, b) => a.bank_name.localeCompare(b.bank_name)
     );
 
     return res.json({

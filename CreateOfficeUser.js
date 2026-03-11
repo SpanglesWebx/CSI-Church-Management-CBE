@@ -5,9 +5,9 @@ const User = require("./Schema/adminlogSchema");  // adjust path if needed
 require("dotenv").config();
 
 // ----------------- CONFIG -----------------
-const ADMIN_USERNAME = "WebxOfficeWorker";
-const ADMIN_PASSWORD = "Admin@123";
-const ADMIN_EMAIL = "webxspangles@gmail.com"; // any email, no OTP needed
+const ADMIN_USERNAME = "";
+const ADMIN_PASSWORD = "";
+const ADMIN_EMAIL = ""; // any email, no OTP needed
 // -------------------------------------------
 
 async function createofficeuser() {

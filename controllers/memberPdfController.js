@@ -11,7 +11,7 @@ exports.downloadMembersPDF = async (req, res) => {
   let browser;
 
   try {
-    const { type = "list", status = "All", search = "" } = req.query;
+    const { type = "list", status = "All", search = "", fromSI, toSI } = req.query;
 
     /* ---------------- FETCH MEMBERS ---------------- */
     const filter = {};
@@ -28,7 +28,18 @@ exports.downloadMembersPDF = async (req, res) => {
       ];
     }
 
-    const members = await Member.find(filter).sort({ member_id: 1 });
+let query = Member.find(filter).sort({ member_id: 1 });
+
+if (fromSI && toSI) {
+
+const start = Number(fromSI) - 1;
+const limit = Number(toSI) - Number(fromSI) + 1;
+
+query = query.skip(start).limit(limit);
+
+}
+
+const members = await query;
 
     /* ---------------- LOAD TEMPLATE ---------------- */
     const templatePath =

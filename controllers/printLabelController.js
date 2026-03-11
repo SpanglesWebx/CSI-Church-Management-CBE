@@ -16,10 +16,53 @@ exports.getMembersForLabel = async (req, res) => {
 
     const skip = (Number(page) - 1) * Number(limit);
 
-    const members = await Member.find(query)
-      .skip(skip)
-      .limit(Number(limit))
-      .sort({ _id: 1 });
+const members = await Member.aggregate([
+  { $match: query },
+
+  {
+    $addFields: {
+      trimmed_name: {
+        $trim: { input: "$member_name" }
+      }
+    }
+  },
+
+  {
+    $addFields: {
+      first_char: { $substrCP: ["$trimmed_name", 0, 1] }
+    }
+  },
+
+  {
+    $addFields: {
+      priority: {
+        $switch: {
+          branches: [
+            {
+              case: { $regexMatch: { input: "$first_char", regex: /^[A-Za-z]/ } },
+              then: 1
+            },
+            {
+              case: { $regexMatch: { input: "$first_char", regex: /^[0-9]/ } },
+              then: 2
+            }
+          ],
+          default: 3
+        }
+      }
+    }
+  },
+
+  {
+    $sort: {
+      priority: 1,
+      trimmed_name: 1
+    }
+  },
+
+  { $skip: skip },
+  { $limit: Number(limit) }
+]);
 
     const total = await Member.countDocuments(query);
 

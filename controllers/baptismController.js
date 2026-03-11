@@ -191,10 +191,11 @@ html = html.replace(/{{CERT_LINE}}/g, certLine);
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle0", timeout: 0 });
 
-    const pdf = await page.pdf({
-      format: "A4",
-      printBackground: true,
-    });
+const pdf = await page.pdf({
+  width: "356mm",
+  height: "216mm",
+  printBackground: true,
+});
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(

@@ -27,7 +27,7 @@ exports.addCemJournal = async (req, res) => {
     const counter = await Counter.findOneAndUpdate(
       { name: "cem_journal" }, // ✅ cemetery counter
       { $inc: { seq: 1 } },
-      { new: true, upsert: true }
+      { returnDocument: "after", upsert: true }
     );
 
     const autoJournalId =
@@ -45,7 +45,7 @@ const dateKey = new Date(date)
 const transCounter = await ReceiptTransCounter.findOneAndUpdate(
   { dateKey: `CEMJRN-${dateKey}` }, // ✅ important
   { $inc: { seq: 1 } },
-  { new: true, upsert: true }
+  { returnDocument: "after", upsert: true }
 );
 
 // format → J0001
@@ -118,7 +118,7 @@ exports.getCemJournalList = async (req, res) => {
     const [data, total] = await Promise.all([
       CemJournal.find(query)
         .select(
-          "autoJournalId date accType headerLedger creditorName totalAmount"
+          "autoJournalId transNo date accType headerLedger creditorName totalAmount"
         )
         .sort({ autoJournalId: -1 })
         .skip(skip)
@@ -154,5 +154,86 @@ exports.getCemJournalById = async (req, res) => {
     res.json({ data: journal });
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch journal" });
+  }
+};
+
+exports.updateCemJournalById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      date,
+      accType,
+      headerLedger,
+      creditorId,
+      creditorName,
+      creditorPhone,
+      entries,
+      totalAmount,
+    } = req.body;
+
+    if (!date || !accType || !entries?.length || !totalAmount) {
+      return res.status(400).json({
+        message: "Required fields missing",
+      });
+    }
+
+    const journal = await CemJournal.findById(id);
+
+    if (!journal) {
+      return res.status(404).json({
+        message: "Cemetery journal not found",
+      });
+    }
+
+    /* --------------------------------------------------
+       IF DATE CHANGED → REGENERATE TRANS NO
+    -------------------------------------------------- */
+
+    let transNo = journal.transNo;
+
+    const oldDate = new Date(journal.date)
+      .toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+
+    const newDate = new Date(date)
+      .toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+
+    if (oldDate !== newDate) {
+
+      const transCounter = await ReceiptTransCounter.findOneAndUpdate(
+        { dateKey: `CEMJRN-${newDate}` },
+        { $inc: { seq: 1 } },
+        { returnDocument: "after", upsert: true }
+      );
+
+      transNo = "J" + String(transCounter.seq).padStart(4, "0");
+    }
+
+    const updated = await CemJournal.findByIdAndUpdate(
+      id,
+      {
+        date,
+        accType,
+        creditorId,
+        creditorName,
+        creditorPhone,
+        headerLedger,
+        entries,
+        totalAmount,
+        transNo,
+      },
+      { new: true }
+    );
+
+    res.json({
+      message: "Cemetery Journal updated successfully",
+      data: updated,
+    });
+
+  } catch (err) {
+    console.error("Update cem journal error:", err);
+    res.status(500).json({
+      message: "Failed to update cemetery journal",
+    });
   }
 };

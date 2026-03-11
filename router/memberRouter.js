@@ -39,6 +39,8 @@ router.get(
   memberPdfController.downloadAgeRangePDF
 );
 
+
+
 // 🔹 ONLY AFTER that, keep dynamic id route
 router.get("/:id", memberCtrl.getMemberById);
 

@@ -425,10 +425,11 @@ html = html.replace(
       timeout: 0,
     });
 
-    const pdf = await page.pdf({
-      format: "A4",
-      printBackground: true,
-    });
+const pdf = await page.pdf({
+  width: "356mm",
+  height: "216mm",
+  printBackground: true,
+});
 
     res.setHeader(
       "Content-Type",
