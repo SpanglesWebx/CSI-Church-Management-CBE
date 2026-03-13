@@ -28,7 +28,9 @@ router.get("/report", getSubscriptionReport);
 
 router.get("/report/print-by-date", getPrintByDate);
 
-router.get("/report/view/:member_id", getSingleSubscriptionReport);
+// router.get("/report/view/:member_id", getSingleSubscriptionReport);
+// router.get("/report/view/:member_id(*)", getSingleSubscriptionReport);
+router.get("/report/view", getSingleSubscriptionReport);
 
 
 

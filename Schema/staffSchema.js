@@ -43,15 +43,16 @@ const staffSchema = new mongoose.Schema(
     non_member_present_address: { type: String, default: "" },
 
     // 🏢 Common Fields
-    designation: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    salary: {
-      type: Number,
-      required: true,
-    },
+designation: {
+  type: String,
+  default: "",
+  trim: true,
+},
+
+salary: {
+  type: Number,
+  default: 0,
+},
 
     // 📅 Staff Starting Date (Defaults to createdAt)
     start_date: {

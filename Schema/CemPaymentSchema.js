@@ -17,15 +17,31 @@ const CemPaymentSchema = new mongoose.Schema(
     },
 
     expenseLines: [
-      {
-        ledgerName: { type: String, required: true },
-        ledgerCode: { type: String, required: true },
-        ledgerCategoryName: { type: String, required: true },
-        accountType: { type: String, required: true },
-        amount: { type: Number, required: true },
-        description: { type: String, default: "" },
-      },
-    ],
+  {
+    voucherNumber: {
+      type: String,
+      default: "",
+    },
+
+    creditorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Creditor",
+    },
+
+    creditorName: String,
+    creditorCode: String,
+    creditorPhone: String,
+
+    ledgerName: { type: String, required: true },
+    ledgerCode: { type: String, required: true },
+    ledgerCategoryName: { type: String, required: true },
+    accountType: { type: String, required: true },
+
+    amount: { type: Number, required: true },
+
+    description: { type: String, default: "" },
+  },
+],
 
     date: {
       type: Date,
@@ -51,13 +67,6 @@ const CemPaymentSchema = new mongoose.Schema(
     chequeNumber: { type: String, default: "" },
     upiId: { type: String, default: "" },
 
-    creditorId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Creditor",
-    },
-    creditorName: String,
-    creditorCode: String,
-    creditorPhone: String,
 
     // ✅ IMPORTANT — cemetery bank
     bankId: {
@@ -66,11 +75,6 @@ const CemPaymentSchema = new mongoose.Schema(
     },
     bankName: String,
     bankAccountNumber: String,
-
-    voucherNumber: {
-      type: String,
-      trim: true,
-    },
 
     inFavourOf: {
       type: String,

@@ -422,7 +422,7 @@ exports.getReceiptList = async (req, res) => {
         memberName: 1,
         nonMemberName: 1,
       })
-        .sort({ autoReceiptId: 1 })
+        .sort({ receiptDate: 1 })
         .skip(skip)
         .limit(Number(limit)),
       Receipt.countDocuments(query),

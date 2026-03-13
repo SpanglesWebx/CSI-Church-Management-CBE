@@ -4,12 +4,14 @@ const {
   addCreditor,
   listCreditors,
   getCreditor,
-  searchCreditorForPayment
+  searchCreditorForPayment,toggleCreditorStatus
 } = require("../controllers/creditorController");
 
 router.post("/add", addCreditor);
 router.get("/list", listCreditors);
 router.get("/search-for-payment", searchCreditorForPayment);
+router.patch("/status/:id", toggleCreditorStatus);
 router.get("/:id", getCreditor); 
+
 
 module.exports = router;

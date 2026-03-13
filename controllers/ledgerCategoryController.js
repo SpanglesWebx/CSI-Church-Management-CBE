@@ -315,3 +315,64 @@ exports.setLedgerDepreciation = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+
+
+exports.toggleCategoryStatus = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    const category = await LedgerCategory.findById(categoryId);
+    if (!category) return res.status(404).json({ message: "Category not found" });
+
+const newStatus = category.status === "active" ? "inactive" : "active";
+
+if (newStatus === "inactive") {
+  // Category OFF → all ledgers inactive
+  category.ledgers.forEach(l => {
+    l.previousStatus = l.status;
+    l.status = "inactive";
+  });
+} else {
+  // Category ON → restore previous ledger state
+  category.ledgers.forEach(l => {
+    if (l.previousStatus !== null) {
+      l.status = l.previousStatus;
+    }
+  });
+}
+
+    category.status = newStatus;
+
+    await category.save();
+
+    res.json({ message: "Category status updated", category });
+
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
+exports.toggleLedgerStatus = async (req, res) => {
+  try {
+    const { categoryId, ledgerCode } = req.params;
+
+    const category = await LedgerCategory.findById(categoryId);
+    if (!category) return res.status(404).json({ message: "Category not found" });
+
+    const ledger = category.ledgers.find(l => l.code === ledgerCode);
+    if (!ledger) return res.status(404).json({ message: "Ledger not found" });
+
+    ledger.status = ledger.status === "active" ? "inactive" : "active";
+
+    await category.save();
+
+    res.json({ message: "Ledger status updated", ledger });
+
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};

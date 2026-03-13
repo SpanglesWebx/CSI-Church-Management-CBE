@@ -16,12 +16,7 @@ exports.addCemPayment = async (req, res) => {
       date,
       paymentMethod,
       cashAccountType,
-      voucherNumber,
       inFavourOf,
-      creditorId,
-      creditorName,
-      creditorCode,
-      creditorPhone,
       bankId,
       bankName,
       bankAccountNumber,
@@ -93,6 +88,23 @@ exports.addCemPayment = async (req, res) => {
       cash.current_balance -= finalAmount;
       await cash.save();
     }
+    /* ---------- BANK PAYMENT (DEDUCT IMMEDIATELY) ---------- */
+    if (paymentMethod === "Cheque" && bankId) {
+
+      const bank = await CemBank.findById(bankId);
+
+      if (!bank || bank.current_balance < finalAmount) {
+        return res.status(400).json({
+          status: "Failed",
+          message: "Insufficient bank balance",
+        });
+      }
+
+      // 🔥 deduct immediately
+      bank.current_balance -= finalAmount;
+
+      await bank.save();
+    }
 
     /* ---------- BANK TRANSFERS ---------- */
     const bankLines = expenseLines.filter(
@@ -156,17 +168,27 @@ exports.addCemPayment = async (req, res) => {
       autoExpenseId,
       transNo,
       totalAmount: finalAmount,
-      expenseLines,
+      expenseLines: expenseLines.map((line) => ({
+        voucherNumber: line.voucherNumber || "",
+
+        creditorId: line.creditorId || null,
+        creditorName: line.creditorName || "",
+        creditorCode: line.creditorCode || "",
+        creditorPhone: line.creditorPhone || "",
+
+        ledgerName: line.ledgerName,
+        ledgerCode: line.ledgerCode,
+        ledgerCategoryName: line.ledgerCategoryName,
+        accountType: line.accountType,
+
+        amount: Number(line.amount),
+        description: line.description || "",
+      })),
       date,
       paymentMethod,
       cashAccountType:
         paymentMethod === "Cash" ? cashAccountType : "",
-      voucherNumber,
       inFavourOf,
-      creditorId,
-      creditorName,
-      creditorCode,
-      creditorPhone,
       bankId: paymentMethod === "Cheque" ? bankId : null,
       bankName: paymentMethod === "Cheque" ? bankName : "",
       bankAccountNumber:
@@ -181,22 +203,37 @@ exports.addCemPayment = async (req, res) => {
 
     /* ---------- BANK RECON ---------- */
     if (paymentMethod === "Cheque" || paymentMethod === "UPI") {
+
+      const firstLine = expenseLines[0] || {};
+
       await BankRecon.create({
         receiptId: expense._id,
         autoReceiptId: expense.autoExpenseId,
         transNo: expense.transNo,
         receiptDate: new Date(date),
+
         paymentMethod:
           paymentMethod === "Cheque" ? "Cheque" : "UPI Payment",
+
         chequeNumber,
         chequeDate: chequeDate ? new Date(chequeDate) : null,
+
         upiId,
+
         bankId,
         bankName,
-        partyName: inFavourOf || creditorName || "Expense",
-        phone: creditorPhone || "",
+
+        partyName:
+          firstLine.creditorName ||
+          firstLine.ledgerName ||
+          "Expense",
+
+        phone: firstLine.creditorPhone || "",
+
         amount: Number(finalAmount),
+
         drCr: "Credit",
+
         realised: false,
         realisedDate: null,
       });
@@ -221,9 +258,17 @@ exports.addCemPayment = async (req, res) => {
 ================================================== */
 exports.getCemPayments = async (req, res) => {
   try {
-    const { page = 1, limit = 25, search = "", startDate, endDate } = req.query;
+
+    const {
+      page = 1,
+      limit = 25,
+      search = "",
+      startDate,
+      endDate
+    } = req.query;
 
     const skip = (page - 1) * limit;
+
     const query = {};
 
     if (search) {
@@ -239,23 +284,272 @@ exports.getCemPayments = async (req, res) => {
       if (endDate) query.date.$lte = new Date(endDate);
     }
 
-    const [data, total] = await Promise.all([
-      CemPayment.find(query)
-        .sort({ autoExpenseId: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      CemPayment.countDocuments(query),
-    ]);
+    const payments = await CemPayment.find(query)
+      .sort({ autoExpenseId: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean();
+
+    const total = await CemPayment.countDocuments(query);
+
+    const data = payments.map((p) => {
+
+      const firstLine = p.expenseLines?.[0] || {};
+
+      return {
+        _id: p._id,
+        autoExpenseId: p.autoExpenseId,
+        transNo: p.transNo,
+
+        paymentFor: {
+          ledgerCode: firstLine.ledgerCode,
+          ledgerName: firstLine.ledgerName,
+          totalLines: p.expenseLines.length
+        },
+
+        creditors: p.expenseLines
+          .filter(l => l.creditorName)
+          .map(l => ({
+            name: l.creditorName,
+            code: l.creditorCode
+          })),
+
+        amount: p.totalAmount,
+        date: p.date,
+
+        realised: p.realised || false,
+        expenseReturned: p.expenseReturned || false
+      };
+    });
 
     res.json({
       data,
       totalPages: Math.ceil(total / limit),
-      totalRecords: total,
+      totalRecords: total
     });
+
   } catch (error) {
     console.error("Get cem payments error:", error);
     res.status(500).json({
-      message: "Failed to fetch payments",
+      message: "Failed to fetch payments"
+    });
+  }
+};
+
+exports.viewPaymentById = async (req, res) => {
+  try {
+
+    const { id } = req.params;
+
+    const payment = await CemPayment.findById(id);
+
+    if (!payment) {
+      return res.status(404).json({
+        status: "Failed",
+        message: "Payment not found"
+      });
+    }
+
+    res.json({
+      status: "Success",
+      data: payment
+    });
+
+  } catch (error) {
+    console.error("View payment error:", error);
+    res.status(500).json({
+      status: "Failed",
+      message: "Server error"
+    });
+  }
+};
+
+exports.updateCemPaymentById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      totalAmount,
+      expenseLines,
+      date,
+      paymentMethod,
+      cashAccountType,
+      inFavourOf,
+      bankId,
+      bankName,
+      bankAccountNumber,
+      chequeNumber,
+      chequeDate,
+      upiId,
+    } = req.body;
+
+    const existing = await CemPayment.findById(id);
+
+    if (!existing) {
+      return res.status(404).json({
+        status: "Failed",
+        message: "Payment not found",
+      });
+    }
+
+    const oldAmount = Number(existing.totalAmount);
+
+    /* ==================================================
+       1️⃣ REVERSE OLD CASH
+    ================================================== */
+
+    if (existing.paymentMethod === "Cash") {
+      const cash = await CashAccount.findOne({
+        account_type: existing.cashAccountType,
+      });
+
+      if (cash) {
+        cash.current_balance += oldAmount;
+        await cash.save();
+      }
+    }
+
+    /* ==================================================
+       2️⃣ REVERSE OLD BANK
+    ================================================== */
+
+    if (existing.paymentMethod === "Cheque" && existing.bankId) {
+      const bank = await CemBank.findById(existing.bankId);
+
+      if (bank) {
+        bank.current_balance += oldAmount;
+        await bank.save();
+      }
+    }
+
+    /* ==================================================
+       3️⃣ REVERSE OLD BANK TRANSFERS
+    ================================================== */
+
+    const oldBankLines = existing.expenseLines.filter(
+      (line) => line.ledgerCategoryName === "Bank A/C"
+    );
+
+    for (const line of oldBankLines) {
+      const targetBank = await CemBank.findOne({
+        ledger_code: line.ledgerCode,
+      });
+
+      if (targetBank) {
+        targetBank.current_balance -= Number(line.amount);
+        await targetBank.save();
+      }
+    }
+
+    /* ==================================================
+       4️⃣ APPLY NEW CASH
+    ================================================== */
+
+    const finalAmount = Number(totalAmount);
+
+    if (paymentMethod === "Cash") {
+      const cash = await CashAccount.findOne({
+        account_type: cashAccountType,
+      });
+
+      if (!cash || cash.current_balance < finalAmount) {
+        return res.status(400).json({
+          status: "Failed",
+          message: "Insufficient cash balance",
+        });
+      }
+
+      cash.current_balance -= finalAmount;
+      await cash.save();
+    }
+
+    /* ==================================================
+       5️⃣ APPLY NEW BANK
+    ================================================== */
+
+    if (paymentMethod === "Cheque" && bankId) {
+      const bank = await CemBank.findById(bankId);
+
+      if (!bank || bank.current_balance < finalAmount) {
+        return res.status(400).json({
+          status: "Failed",
+          message: "Insufficient bank balance",
+        });
+      }
+
+      bank.current_balance -= finalAmount;
+      await bank.save();
+    }
+
+    /* ==================================================
+       6️⃣ APPLY NEW BANK TRANSFERS
+    ================================================== */
+
+    const newBankLines = expenseLines.filter(
+      (line) => line.ledgerCategoryName === "Bank A/C"
+    );
+
+    for (const line of newBankLines) {
+      const targetBank = await CemBank.findOne({
+        ledger_code: line.ledgerCode,
+      });
+
+      if (targetBank) {
+        targetBank.current_balance += Number(line.amount);
+        await targetBank.save();
+      }
+    }
+
+    /* ==================================================
+       7️⃣ UPDATE DOCUMENT
+    ================================================== */
+
+    const updated = await CemPayment.findByIdAndUpdate(
+      id,
+      {
+        totalAmount: finalAmount,
+        expenseLines,
+        date,
+        paymentMethod,
+        cashAccountType,
+        inFavourOf,
+        bankId,
+        bankName,
+        bankAccountNumber,
+        chequeNumber,
+        chequeDate,
+        upiId,
+      },
+      { new: true }
+    );
+
+    /* ==================================================
+       8️⃣ UPDATE BRS
+    ================================================== */
+
+    await BankRecon.findOneAndUpdate(
+      { receiptId: updated._id },
+      {
+        receiptDate: new Date(date),
+        bankId,
+        bankName,
+        chequeNumber,
+        chequeDate,
+        upiId,
+        amount: finalAmount,
+      }
+    );
+
+    res.status(200).json({
+      status: "Success",
+      message: "Payment updated successfully",
+      data: updated,
+    });
+  } catch (err) {
+    console.error("Update cem payment error:", err);
+    res.status(500).json({
+      status: "Failed",
+      message: "Server error",
     });
   }
 };

@@ -10,7 +10,9 @@ const {
   getNextLedgerCode,
   getBankLedgers,
   setDepreciation,
-  setLedgerDepreciation
+  setLedgerDepreciation,
+  toggleCategoryStatus,
+  toggleLedgerStatus
 } = require("../controllers/ledgerCategoryController");
 
 // CATEGORY ROUTES
@@ -26,5 +28,8 @@ router.post("/ledgers/:categoryId/save", saveLedgers);
 
 router.post("/set-depreciation", setDepreciation);
 router.post("/set-ledger-depreciation", setLedgerDepreciation);
+
+router.patch("/category/:categoryId/status", toggleCategoryStatus);
+router.patch("/ledger/:categoryId/:ledgerCode/status", toggleLedgerStatus);
 
 module.exports = router;

@@ -276,3 +276,32 @@ exports.getCreditor = async (req, res) => {
     return res.status(500).json({ status: "Failed", message: "Server error" });
   }
 };
+
+
+
+
+exports.toggleCreditorStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const creditor = await Creditor.findById(id);
+    if (!creditor)
+      return res.status(404).json({ status: "Failed", message: "Creditor not found" });
+
+    const newStatus = creditor.status === "Active" ? "Inactive" : "Active";
+
+    creditor.status = newStatus;
+
+    await creditor.save();
+
+    res.json({
+      status: "Success",
+      message: "Creditor status updated",
+      data: creditor,
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: "Failed", message: "Server error" });
+  }
+};

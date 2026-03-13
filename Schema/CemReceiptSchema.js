@@ -13,17 +13,31 @@ const CemReceiptSchema = new mongoose.Schema(
     },
 
     receiptLines: [
-      {
-        receiptNumber: { type: String, trim: true, default: "" },
-        ledgerName: String,
-        ledgerCode: String,
-        ledgerCategoryName: String,
-        accountType: String,
-        incomeType: String,
-        amount: Number,
-        description: String,
-      },
-    ],
+  {
+    receiptNumber: { type: String, trim: true, default: "" },
+
+    ledgerName: String,
+    ledgerCode: String,
+    ledgerCategoryName: String,
+    accountType: String,
+    incomeType: String,
+
+    amount: Number,
+    description: String,
+
+    isMember: {
+      type: Boolean,
+      default: true,
+    },
+
+    memberId: { type: String, default: "" },
+    memberName: { type: String, default: "" },
+    phone: { type: String, default: "" },
+
+    nonMemberName: { type: String, default: "" },
+    nonMemberPhone: { type: String, default: "" },
+  },
+],
 
     totalAmount: {
       type: Number,
@@ -54,13 +68,6 @@ const CemReceiptSchema = new mongoose.Schema(
     bankName: { type: String, default: "" },
     bankAccountNumber: { type: String, default: "" },
     upiId: { type: String, default: "" },
-
-    isMember: { type: Boolean, default: true },
-    memberId: { type: String, default: "" },
-    memberName: { type: String, default: "" },
-    phone: { type: String, default: "" },
-    nonMemberName: { type: String, default: "" },
-    nonMemberPhone: { type: String, default: "" },
 
     migrated: { type: Boolean, default: false },
 

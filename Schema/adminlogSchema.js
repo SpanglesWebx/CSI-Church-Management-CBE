@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema({
     "pastorsecondary",
     "dcmember",
     "churchofficeworker",
+    "officestaff",
     "treasurer",
     "accountant",
     "secretary",

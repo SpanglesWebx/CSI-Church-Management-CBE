@@ -662,7 +662,9 @@ exports.getNotifications = async (req, res) => {
 
     const notifications = await Notification.find({
       status: "Active"
-    }).lean();
+    })
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .lean();
 
     const filtered = notifications
       .map(n => {

@@ -164,12 +164,23 @@ await ChurchExpense.findByIdAndUpdate(entry.receiptId, {
       }
 
       // 🔴 CEM EXPENSE
+      // 🔴 CEM EXPENSE
       else if (isCemExpense) {
+
+        const expense = await CemPayment.findById(entry.receiptId).lean();
+
+        if (expense?.bankId) {
+          const bank = await CemBank.findById(expense.bankId);
+
+          if (bank) {
+            bank.current_balance += Number(entry.amount);
+            await bank.save();
+          }
+        }
+
         await CemPayment.findByIdAndUpdate(entry.receiptId, {
           expenseReturned: true,
-          expenseReturnDate: returnDate
-            ? new Date(returnDate)
-            : null,
+          expenseReturnDate: returnDate ? new Date(returnDate) : null,
           expenseReturnReason: returnReason || "",
         });
       }
