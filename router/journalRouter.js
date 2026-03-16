@@ -5,10 +5,12 @@ const {
   getJournalList,
   getJournalById,
   updateJournalById,
+  downloadJournalDatewise,
 } = require("../controllers/journalController");
 
 router.post("/add", addJournal);
 router.get("/list", getJournalList);
+router.get("/download-datewise", downloadJournalDatewise);
 router.get("/:id", getJournalById);
 router.put("/update/:id", updateJournalById);
 

@@ -50,5 +50,5 @@ const CemBankSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// module.exports = mongoose.model("CemBank", CemBankSchema);
-module.exports = mongoose.models.CemBank || mongoose.model("CemBank", CemBankSchema);
+module.exports = mongoose.model("CemBank", CemBankSchema);
+// module.exports = mongoose.models.CemBank || mongoose.model("CemBank", CemBankSchema);

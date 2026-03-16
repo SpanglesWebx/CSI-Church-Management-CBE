@@ -16,7 +16,7 @@ const CemPayment = require("../Schema/CemPaymentSchema");
 const CemReceipt = require("../Schema/CemReceiptSchema");
 const CemJournal = require("../Schema/CemJournalSchema");
 const CemCashAccount = require("../Schema/CemCashAccountSchema");
-const CemBank = require("../Schema/CemBankSchema");
+const CemBank = require("../Schema/cemBankSchema");
 
 
 //Women Fund A/C

@@ -264,3 +264,32 @@ exports.updateJournalById = async (req, res) => {
     });
   }
 };
+exports.downloadJournalDatewise = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const query = {};
+
+    if (startDate || endDate) {
+      query.date = {};
+
+      if (startDate) query.date.$gte = new Date(startDate);
+
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query.date.$lte = end;
+      }
+    }
+
+    const journals = await Journal.find(query)
+      .sort({ date: 1 })
+      .lean();
+
+    res.json({ data: journals });
+
+  } catch (err) {
+    console.error("Journal download error:", err);
+    res.status(500).json({ message: "Failed to fetch journals" });
+  }
+};
