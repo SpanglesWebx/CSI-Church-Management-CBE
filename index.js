@@ -87,8 +87,10 @@ const shopRoutes = require("./router/shopRouter");
 const io = new Server(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"]
-  }
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization"]
+  },
+  transports: ["websocket", "polling"]
 });
 app.set("io", io);
 
@@ -138,7 +140,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(cors({
   origin: "*",
-  methods: ["GET","POST","PUT","DELETE"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type","Authorization"]
 }));
 

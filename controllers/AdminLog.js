@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../Schema/adminlogSchema');
-const Member = require('../Schema/memberSchema'); // to check member_id + email
+const Member = require('../Schema/memberSchema'); // to check member_id + primary_email
 const Pastor = require("../Schema/pastorSchema")
 const nodemailer = require("nodemailer");
 const { sendSMS } = require("../util/sms");
@@ -38,7 +38,7 @@ const loginOtpStore = {};
 //     const expiresAt = Date.now() + 3 * 60 * 1000;
 //     otpStore[member_id] = { otp, expiresAt };
 
-//     // 4. Send OTP email
+//     // 4. Send OTP primary_email
 //     const transporter = nodemailer.createTransport({
 //       service: "gmail",
 //       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
@@ -46,12 +46,12 @@ const loginOtpStore = {};
 
 //     await transporter.sendMail({
 //       from: process.env.EMAIL_USER,
-//       to: member.email,
+//       to: member.primary_email,
 //       subject: "Church Management - Signup OTP",
 //       text: `Hello ${member.member_name},\n\nYour OTP is: ${otp}\n\nThis OTP will expire in 3 minutes.`,
 //     });
 
-//     return res.json({ email: member.email });
+//     return res.json({ primary_email: member.primary_email });
 //   } catch (err) {
 //     console.error("❌ Signup request error:", err);
 //     return res.status(500).json({ message: "Server error" });
@@ -60,60 +60,60 @@ const loginOtpStore = {};
 
 exports.checkMember = async (req, res) => {
 
- try {
+  try {
 
-  const { member_id, mode } = req.body;
+    const { member_id, mode } = req.body;
 
-  let member = await Member.findOne({ member_id });
+    let member = await Member.findOne({ member_id });
 
-  if (!member)
-   member = await Pastor.findOne({ member_id });
+    if (!member)
+      member = await Pastor.findOne({ member_id });
 
-  if (!member)
-   return res.status(404).json({
-    message: "Member/Pastor not found"
-   });
+    if (!member)
+      return res.status(404).json({
+        message: "Member/Pastor not found"
+      });
 
-  const existingUser = await User.findOne({ member_id });
+    const existingUser = await User.findOne({ member_id });
 
-  // 🚫 Block ONLY for Signup
-  if(mode !== "forgot"){
+    // 🚫 Block ONLY for Signup
+    if (mode !== "forgot") {
 
-   if(existingUser && existingUser.password){
+      if (existingUser && existingUser.password) {
 
-    return res.status(400).json({
-     message:"User already exists, please login."
+        return res.status(400).json({
+          message: "User already exists, please login."
+        });
+
+      }
+
+    }
+
+    const targetEmail = member.primary_email;
+
+    if (!targetEmail)
+      return res.status(400).json({
+        message: "Primary Email not registered"
+      });
+
+    return res.json({
+      email: targetEmail,
+      member_name: member.member_name
     });
 
-   }
+  } catch (err) {
+
+    console.error("Check member error:", err);
+
+    return res.status(500).json({
+      message: "Server error"
+    });
 
   }
 
-  const targetEmail = member.primary_email;
-
-  if (!targetEmail)
-   return res.status(400).json({
-    message: "Primary Email not registered"
-   });
-
-  return res.json({
-   email: targetEmail,
-   member_name: member.member_name
-  });
-
- } catch (err) {
-
-  console.error("Check member error:", err);
-
-  return res.status(500).json({
-   message:"Server error"
-  });
-
- }
-
 };
 
-//created at 13/01/2026 at 11.57AM with sms and email
+//created at 13/01/2026 at 11.57AM with sms and primary_email
 exports.signupRequest = async (req, res) => {
   try {
     const { member_id, mode } = req.body;
@@ -128,17 +128,17 @@ exports.signupRequest = async (req, res) => {
 
 
 
-if (mode !== "forgot") {
+    if (mode !== "forgot") {
 
- if (existingUser) {
-   if (!(existingUser.isPreCreated || !existingUser.password)) {
-     return res.status(400).json({
-      message: "User already exists, please login."
-     });
-   }
- }
+      if (existingUser) {
+        if (!(existingUser.isPreCreated || !existingUser.password)) {
+          return res.status(400).json({
+            message: "User already exists, please login."
+          });
+        }
+      }
 
-}
+    }
 
     // 🔥 Detect treasurer role
     const isTreasurer = existingUser?.roles?.includes("treasurer");
@@ -170,32 +170,36 @@ if (mode !== "forgot") {
         mobile: member.primary_contact_number.replace(/\d(?=\d{2})/g, "*"),
       });
     }
-
+    console.log("EMAIL_USER:", process.env.EMAIL_USER);
+    console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
     // ================= EXISTING EMAIL OTP FLOW =================
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      // service: "gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
     });
 
-// Use PRIMARY EMAIL first
-const targetEmail = member.primary_email;
+    // Use PRIMARY EMAIL first
+    const targetEmail = member.primary_email;
 
-if (!targetEmail)
-  return res.status(400).json({
-    message: "Primary Email not registered"
-  });
+    if (!targetEmail)
+      return res.status(400).json({
+        message: "Primary Email not registered"
+      });
 
-await transporter.sendMail({
-  from: process.env.EMAIL_USER,
-  to: targetEmail,
-  subject: "Church Management - Signup OTP",
-  text: `Hello ${member.member_name},\n\nYour OTP is: ${otp}\n\nThis OTP will expire in 3 minutes.`,
-});
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: targetEmail,
+      subject: "Church Management - Signup OTP",
+      text: `Hello ${member.member_name},\n\nYour OTP is: ${otp}\n\nThis OTP will expire in 3 minutes.`,
+    });
 
-return res.json({
-  mode: "email",
-  email: targetEmail
-});
+    return res.json({
+      mode: "email",
+      email: targetEmail
+    });
 
   } catch (err) {
     console.error("❌ Signup request error:", err);
@@ -236,7 +240,7 @@ exports.completeSignup = async (req, res) => {
     let member = await Member.findOne({ member_id });
     if (!member) member = await Pastor.findOne({ member_id });
     if (!member) {
-      return res.status(404).json({ message: "Member/Pastor not found" }); 
+      return res.status(404).json({ message: "Member/Pastor not found" });
     }
 
     // 2️⃣ Check if user already exists
@@ -247,19 +251,19 @@ exports.completeSignup = async (req, res) => {
         // Hash new password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-const targetEmail = member.primary_email;
+        const targetEmail = member.primary_email;
 
-if (!targetEmail) {
-  return res.status(400).json({
-    message: "Primary Email not registered"
-  });
-}
+        if (!targetEmail) {
+          return res.status(400).json({
+            message: "Primary Email not registered"
+          });
+        }
 
-user.password = hashedPassword;
-user.email = targetEmail;   // ⭐ ADD THIS
-user.isPreCreated = false;
+        user.password = hashedPassword;
+        user.email = targetEmail;   // ⭐ ADD THIS
+        user.isPreCreated = false;
 
-await user.save();
+        await user.save();
 
         return res
           .status(200)
@@ -274,23 +278,23 @@ await user.save();
     // 3️⃣ Create new user account
     const hashedPassword = await bcrypt.hash(password, 10);
 
-// Use PRIMARY EMAIL first
-const targetEmail = member.primary_email;
+    // Use PRIMARY EMAIL first
+    const targetEmail = member.primary_email;
 
-if (!targetEmail) {
-  return res.status(400).json({
-    message: "Primary Email not registered"
-  });
-}
+    if (!targetEmail) {
+      return res.status(400).json({
+        message: "Primary Email not registered"
+      });
+    }
 
-const newUser = new User({
-  member_id,
-  member_name: member.member_name,
-  email: targetEmail,
-  password: hashedPassword,
-  roles: ["member"],
-  isPreCreated: false,
-});
+    const newUser = new User({
+      member_id,
+      member_name: member.member_name,
+      email: targetEmail,
+      password: hashedPassword,
+      roles: ["member"],
+      isPreCreated: false,
+    });
 
     await newUser.save();
 
@@ -371,120 +375,122 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "User has not set a password yet." });
     }
 
-let isMatch = true;
+    let isMatch = true;
 
-// Only check password if OTP not provided
-if (!otp) {
+    // Only check password if OTP not provided
+    if (!otp) {
 
- if (!password)
-  return res.status(400).json({
-   message:"Password required"
-  });
+      if (!password)
+        return res.status(400).json({
+          message: "Password required"
+        });
 
- isMatch = await bcrypt.compare(password, user.password);
+      isMatch = await bcrypt.compare(password, user.password);
 
- if (!isMatch) {
+      if (!isMatch) {
 
-  return res.status(401).json({
-   message:"Wrong password",
-   memberExists:true
-  });
+        return res.status(401).json({
+          message: "Wrong password",
+          memberExists: true
+        });
 
- }
+      }
 
-}
+    }
     console.log("🧩 Password match result:", isMatch);
 
-if (!isMatch) {
+    if (!isMatch) {
 
-  console.log("❌ Incorrect password for:", user.member_id);
+      console.log("❌ Incorrect password for:", user.member_id);
 
-  return res.status(401).json({
-    message: "Wrong password",
-    memberExists: true
-  });
+      return res.status(401).json({
+        message: "Wrong password",
+        memberExists: true
+      });
 
-}
+    }
 
     // ================= TREASURER OTP LAYER =================
 
-if (user.roles.includes("treasurer")) {
+    if (user.roles.includes("treasurer")) {
 
- if (!otp) {
+      if (!otp) {
 
-  let member =
-   await Member.findOne({ member_id: user.member_id }) ||
-   await Pastor.findOne({ member_id: user.member_id });
+        let member =
+          await Member.findOne({ member_id: user.member_id }) ||
+          await Pastor.findOne({ member_id: user.member_id });
 
-  const targetEmail = member.primary_email;
+        const targetEmail = member.primary_email;
 
-  if (!targetEmail)
-   return res.status(400).json({
-    message:"Primary Email not registered"
-   });
+        if (!targetEmail)
+          return res.status(400).json({
+            message: "Primary Email not registered"
+          });
 
-  const otpCode =
-   Math.floor(100000 + Math.random()*900000).toString();
+        const otpCode =
+          Math.floor(100000 + Math.random() * 900000).toString();
 
-  loginOtpStore[user.member_id] = {
-   otp: otpCode,
-   expiresAt: Date.now()+3*60*1000
-  };
+        loginOtpStore[user.member_id] = {
+          otp: otpCode,
+          expiresAt: Date.now() + 3 * 60 * 1000
+        };
 
-  console.log("LOGIN EMAIL OTP:",otpCode);
+        console.log("LOGIN EMAIL OTP:", otpCode);
 
-  const transporter =
-   nodemailer.createTransport({
-    service:"gmail",
-    auth:{
-     user:process.env.EMAIL_USER,
-     pass:process.env.EMAIL_PASS
+        const transporter =
+          nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 465,
+            secure: true,
+            auth: {
+              user: process.env.EMAIL_USER,
+              pass: process.env.EMAIL_PASS
+            }
+          });
+
+        await transporter.sendMail({
+
+          from: process.env.EMAIL_USER,
+
+          to: targetEmail,
+
+          subject: "Church Login OTP",
+
+          text: `Your Login OTP is ${otpCode}. Valid for 3 minutes.`
+
+        });
+
+        return res.json({
+
+          step: "OTP_REQUIRED",
+
+          email: targetEmail,
+
+          member_name: user.member_name
+
+        });
+
+      }
+
+      // OTP VERIFY
+
+      const record =
+        loginOtpStore[user.member_id];
+
+      if (!record || Date.now() > record.expiresAt)
+        return res.status(400).json({
+          message: "OTP expired. Please login again."
+        });
+
+      if (record.otp !== otp)
+        return res.status(400).json({
+          message: "Invalid OTP"
+        });
+
+      delete loginOtpStore[user.member_id];
+
     }
-   });
 
-  await transporter.sendMail({
-
-   from:process.env.EMAIL_USER,
-
-   to:targetEmail,
-
-   subject:"Church Login OTP",
-
-   text:`Your Login OTP is ${otpCode}. Valid for 3 minutes.`
-
-  });
-
-return res.json({
-
- step:"OTP_REQUIRED",
-
- primary_email:targetEmail,
-
- member_name:user.member_name
-
-});
-
- }
-
- // OTP VERIFY
-
- const record =
-  loginOtpStore[user.member_id];
-
- if(!record || Date.now()>record.expiresAt)
-  return res.status(400).json({
-   message:"OTP expired. Please login again."
-  });
-
- if(record.otp !== otp)
-  return res.status(400).json({
-   message:"Invalid OTP"
-  });
-
- delete loginOtpStore[user.member_id];
-
-}
-    
     // if (user.roles.includes("treasurer")) {
 
     //   // STEP-1: Password ok but OTP not provided → Send OTP
@@ -527,20 +533,20 @@ return res.json({
     // }
     // ================= END TREASURER OTP LAYER =================
 
-//     if (user.isLoggedIn && user.currentSessionId) {
-//   return res.status(403).json({
-//     message: "This account is already logged in on another browser/device"
-//   });
-// }
-// const sessionId = uuidv4();
+    //     if (user.isLoggedIn && user.currentSessionId) {
+    //   return res.status(403).json({
+    //     message: "This account is already logged in on another browser/device"
+    //   });
+    // }
+    // const sessionId = uuidv4();
 
-// user.isLoggedIn = true;
-// user.currentSessionId = sessionId;
-// await user.save();
+    // user.isLoggedIn = true;
+    // user.currentSessionId = sessionId;
+    // await user.save();
 
 
     const token = jwt.sign(
-      { userId: user._id, member_id: user.member_id, roles: user.roles},
+      { userId: user._id, member_id: user.member_id, roles: user.roles },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -662,7 +668,7 @@ exports.createUserByAdmin = async (req, res) => {
     // ✅ Create user entry (no password yet → signup will set it)
     const newUser = new User({
       member_id: person.member_id,
-      email: person.email || "", // fallback
+      email: person.primary_email || "",
       member_name: person.member_name,
       roles: assignedRoles,
       isPreCreated: true,
@@ -709,36 +715,36 @@ exports.getCemeteryManagers = async (req, res) => {
 // -------------------- FORGOT PASSWORD RESET --------------------
 exports.resetPassword = async (req, res) => {
 
- try {
+  try {
 
-  const { member_id, password } = req.body;
+    const { member_id, password } = req.body;
 
-  const user = await User.findOne({ member_id });
+    const user = await User.findOne({ member_id });
 
-  if (!user)
-   return res.status(404).json({
-    message: "User not found"
-   });
+    if (!user)
+      return res.status(404).json({
+        message: "User not found"
+      });
 
-  const hashedPassword = await bcrypt.hash(password,10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  user.password = hashedPassword;
+    user.password = hashedPassword;
 
-  await user.save();
+    await user.save();
 
-  return res.json({
-   message:"Password updated successfully"
-  });
+    return res.json({
+      message: "Password updated successfully"
+    });
 
- } catch(err){
+  } catch (err) {
 
-  console.error("Reset password error:",err);
+    console.error("Reset password error:", err);
 
-  return res.status(500).json({
-   message:"Server error"
-  });
+    return res.status(500).json({
+      message: "Server error"
+    });
 
- }
+  }
 
 };
 

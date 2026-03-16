@@ -1,5 +1,5 @@
-const mongoose = require("mongoose"); 
-
+const mongoose = require("mongoose");
+ 
 const LedgerSchema = new mongoose.Schema(
   {
     code: {
@@ -11,12 +11,24 @@ const LedgerSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
-    
+ 
+status: {
+  type: String,
+  enum: ["active", "inactive"],
+  default: "active"
+},
+ 
+previousStatus: {
+  type: String,
+  enum: ["active", "inactive"],
+  default: null
+},
+   
     depreciationValue: {
       type: Number,
       default: null
     },
-    
+   
     depreciationDate: {
       type: Date,
       default: null
@@ -24,7 +36,7 @@ const LedgerSchema = new mongoose.Schema(
   },
   { _id: false }
 );
-
+ 
 const LedgerCategorySchema = new mongoose.Schema(
   {
     accountType: {
@@ -41,24 +53,30 @@ const LedgerCategorySchema = new mongoose.Schema(
       ],
       required: true
     },
-
+ 
     incomeType: {
       type: String,
       enum: ["ASSESSABLE", "NON_ASSESSABLE"],
       default: null
     },
-
+ 
     name: {
       type: String,
       required: true,
       trim: true
     },
-
+ 
+status: {
+  type: String,
+  enum: ["active", "inactive"],
+  default: "active"
+},
+ 
     depreciationPercent: {
       type: Number,
       default: null
     },
-
+ 
     // 🔥 LEDGERS WITH AUTO CODE
     ledgers: {
       type: [LedgerSchema],
@@ -67,11 +85,11 @@ const LedgerCategorySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
+ 
 // Prevent duplicate category under same account + income type
 LedgerCategorySchema.index(
   { accountType: 1, incomeType: 1, name: 1 },
   { unique: true }
 );
-
+ 
 module.exports = mongoose.model("LedgerCategory", LedgerCategorySchema);

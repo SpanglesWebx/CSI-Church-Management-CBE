@@ -31,7 +31,7 @@ const CemBankSchema = new mongoose.Schema(
 
     opening_balance: {
       type: Number,
-      default: 0,
+      default: 0,  
     },
 
     status: {
@@ -50,4 +50,5 @@ const CemBankSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("CemBank", CemBankSchema);
+// module.exports = mongoose.model("CemBank", CemBankSchema);
+module.exports = mongoose.models.CemBank || mongoose.model("CemBank", CemBankSchema);
