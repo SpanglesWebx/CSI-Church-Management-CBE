@@ -878,7 +878,22 @@ exports.getPrintByDate = async (req, res) => {
 
     const selectedDate = new Date(date).toISOString().slice(0, 10);
 
-    const subscriptions = await Subscription.find().lean();
+const subscriptions = await Subscription.find({
+  $or: [
+    { "april.allocations.date": { $gte: new Date(date), $lt: new Date(date + "T23:59:59") } },
+    { "may.allocations.date": { $gte: new Date(date), $lt: new Date(date + "T23:59:59") } },
+    { "june.allocations.date": { $gte: new Date(date), $lt: new Date(date + "T23:59:59") } },
+    { "july.allocations.date": { $gte: new Date(date), $lt: new Date(date + "T23:59:59") } },
+    { "august.allocations.date": { $gte: new Date(date), $lt: new Date(date + "T23:59:59") } },
+    { "september.allocations.date": { $gte: new Date(date), $lt: new Date(date + "T23:59:59") } },
+    { "october.allocations.date": { $gte: new Date(date), $lt: new Date(date + "T23:59:59") } },
+    { "november.allocations.date": { $gte: new Date(date), $lt: new Date(date + "T23:59:59") } },
+    { "december.allocations.date": { $gte: new Date(date), $lt: new Date(date + "T23:59:59") } },
+    { "january.allocations.date": { $gte: new Date(date), $lt: new Date(date + "T23:59:59") } },
+    { "february.allocations.date": { $gte: new Date(date), $lt: new Date(date + "T23:59:59") } },
+    { "march.allocations.date": { $gte: new Date(date), $lt: new Date(date + "T23:59:59") } }
+  ]
+}).lean();
 
     const months = [
       "april","may","june","july","august","september",

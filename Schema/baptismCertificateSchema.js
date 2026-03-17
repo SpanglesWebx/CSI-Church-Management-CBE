@@ -22,6 +22,7 @@ const baptismCertificateSchema = new mongoose.Schema({
   mother_aadhar: String,
 
   address: String,
+  pincode: { type: String, default: "" },
 
   baptism_date: String,
   baptism_type: String,

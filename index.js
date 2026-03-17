@@ -252,6 +252,7 @@ app.use("/api/marriages", require("./router/marriageRouter"));
 app.use("/api/matrimonial-fees", require("./router/matrimonialFeesRouter"));
 app.use("/api/matrimonial", require("./router/matrimonialRouter"));
 app.use("/api/zones", require("./router/zoneRouter"));
+app.use("/api/occupations", require("./router/occupationRouter"));
 app.use("/member-photo-uploads", express.static("uploads"));
 app.use("/api/new-members", require("./router/memberRouter"));
 app.use("/api/family", require("./router/familyRouter"));

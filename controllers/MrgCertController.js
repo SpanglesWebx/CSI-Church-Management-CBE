@@ -216,7 +216,25 @@ const formatDob = (dob) => {
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
 };
 
+const getCondition = (status, type) => {
+  if (!status) return "-";
 
+  const s = status.toLowerCase();
+
+  if (s === "single") {
+    return type === "groom" ? "BACHELOR" : "SPINSTER";
+  }
+
+  // if (s === "widower") {
+  //   return type === "groom" ? "WIDOWER" : "WIDOW";
+  // }
+
+  // if (s === "divorce") {
+  //   return "DIVORCE";
+  // }
+
+  return "-";
+};
 
 const getOrdinal = (n) => {
   if (n % 10 === 1 && n % 100 !== 11) return n + "st";
@@ -297,6 +315,12 @@ html = html.replace(
             marriage.groom?.nonMemberName
         )
       )
+.replace(/{{GROOM_CONDITION}}/g,
+  getCondition(marriage.groom?.maritalStatus, "groom")
+)
+.replace(/{{BRIDE_CONDITION}}/g,
+  getCondition(marriage.bride?.maritalStatus, "bride")
+)
       .replace(
         /{{BRIDE_NAME}}/g,
         v(
@@ -328,18 +352,18 @@ html = html.replace(
         /{{BRIDE_PROFESSION}}/g,
         v(marriage.bride?.profession)
       )
-      .replace(
-        /{{GROOM_ADDRESS}}/g,
-        v(marriage.groom?.address)
-      )
+.replace(
+  /{{GROOM_ADDRESS}}/g,
+  `${v(marriage.groom?.address)} - ${v(marriage.groom?.pincode)}`
+)
       .replace(
         /{{DOWNLOAD_DATE}}/g,
         formatToday()
       )
-      .replace(
-        /{{BRIDE_ADDRESS}}/g,
-        v(marriage.bride?.address)
-      )
+.replace(
+  /{{BRIDE_ADDRESS}}/g,
+  `${v(marriage.bride?.address)} - ${v(marriage.bride?.pincode)}`
+)
       .replace(
         /{{GROOM_FATHER}}/g,
         v(marriage.groom?.fatherName)

@@ -169,7 +169,7 @@ exports.downloadSingleBaptismPDF = async (req, res) => {
       .replace(/{{BAPTISM_TYPE}}/g, v(baptism.baptism_type))
       .replace(/{{BAPTISM_PLACE}}/g, v(baptism.baptism_place))
       .replace(/{{BAPTISED_BY}}/g, v(baptism.baptised_by))
-      .replace(/{{GOD_PARENTS}}/g, v(baptism.god_parents))
+      .replace(/{{GOD_PARENTS}}/g, v(baptism.god_parents).replace(/,/g,"<br>"))
       .replace(/{{WITNESSES}}/g, v(baptism.witnesses))
       .replace(/{{ISSUED_ON}}/g, v(baptism.issued_on))
       .replace(/{{ISSUED_BY}}/g, v(baptism.issued_by))

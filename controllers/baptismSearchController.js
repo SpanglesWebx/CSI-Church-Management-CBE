@@ -17,7 +17,7 @@ exports.searchBaptismMembersById = async (req, res) => {
       member_id member_name member_tamil_name
       dob age occupation aadhar_number place_of_birth
       father_name mother_name
-      present_address
+      present_address present_pincode
     `).lean();
 
     res.json(members);
@@ -44,7 +44,7 @@ exports.searchBaptismMembersByName = async (req, res) => {
       member_id member_name member_tamil_name
       dob age occupation aadhar_number place_of_birth
       father_name mother_name
-      present_address
+      present_address present_pincode
     `).lean();
 
     res.json(members);

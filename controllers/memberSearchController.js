@@ -451,6 +451,121 @@ exports.searchMembersUnified = async (req, res) => {
   }
 };
 
+exports.searchMembersByName = async (req, res) => {
+  try {
+    const { name } = req.query;
+
+    if (!name) {
+      return res.status(400).json({ message: "Name query is required" });
+    }
+
+    const regex = new RegExp(escapeRegex(name), "i");
+
+    const [members, pastors, pastorFamilyMembers] = await Promise.all([
+      Member.find({ member_name: { $regex: regex } })
+        .select(
+          "member_id member_name member_tamil_name contact_numbers permanent_address present_address family_id gender status aadhar_number relation_with_head isHead"
+        )
+        .lean(),
+
+      Pastor.find({ member_name: { $regex: regex } })
+        .select(
+          "member_id member_name member_tamil_name mobile_number permanent_address present_address familyId pastor_role gender status aadhar_number"
+        )
+        .lean(),
+
+      PastorFamilyMember.find({ member_name: { $regex: regex } })
+        .select(
+          "member_id member_name member_tamil_name mobile_number permanent_address present_address familyId relationship_with_family_head gender status aadhar_number"
+        )
+        .lean(),
+    ]);
+
+    const map = new Map();
+
+    const normalizeAndMerge = (doc, source) => {
+      const idKey =
+        (doc.member_id && String(doc.member_id).trim()) || String(doc._id);
+
+      const extractedMobile =
+        Array.isArray(doc.contact_numbers) && doc.contact_numbers.length > 0
+          ? doc.contact_numbers.join(", ")
+          : doc.mobile_number || null;
+
+      const extractedFamilyId = doc.family_id || doc.familyId || null;
+
+      const extractedRelation =
+        doc.relation_with_head ||
+        doc.relationship_with_family_head ||
+        null;
+
+      const extractedAadhar = doc.aadhar_number || null;
+
+      let extractedIsHead = null;
+      if (doc.isHead) extractedIsHead = doc.isHead;
+      else if (source === "Pastor") extractedIsHead = "Yes";
+      else if (source === "PastorFamilyMember") extractedIsHead = "No";
+
+      if (!map.has(idKey)) {
+        map.set(idKey, {
+          member_id: doc.member_id || null,
+          member_name: doc.member_name || null,
+          member_tamil_name: doc.member_tamil_name || null,
+          mobile_number: extractedMobile,
+          familyId: extractedFamilyId,
+          relationship_with_family_head: extractedRelation,
+          aadhar_number: extractedAadhar,
+          isHead: extractedIsHead,
+          permanent_address: doc.permanent_address || null,
+          present_address: doc.present_address || null,
+          pastor_role: doc.pastor_role || null,
+          gender: doc.gender || null,
+          status: doc.status || null,
+          sources: [source],
+        });
+      } else {
+        const existing = map.get(idKey);
+        existing.sources = Array.from(new Set([...existing.sources, source]));
+
+        if (!existing.mobile_number && extractedMobile)
+          existing.mobile_number = extractedMobile;
+
+        if (!existing.familyId && extractedFamilyId)
+          existing.familyId = extractedFamilyId;
+
+        if (!existing.relationship_with_family_head && extractedRelation)
+          existing.relationship_with_family_head = extractedRelation;
+
+        if (!existing.aadhar_number && extractedAadhar)
+          existing.aadhar_number = extractedAadhar;
+
+        if (!existing.isHead && extractedIsHead)
+          existing.isHead = extractedIsHead;
+
+        if (!existing.member_name && doc.member_name)
+          existing.member_name = doc.member_name;
+      }
+    };
+
+    members.forEach((m) => normalizeAndMerge(m, "Member"));
+    pastors.forEach((p) => normalizeAndMerge(p, "Pastor"));
+    pastorFamilyMembers.forEach((pf) =>
+      normalizeAndMerge(pf, "PastorFamilyMember")
+    );
+
+    const results = Array.from(map.values());
+
+    if (!results.length) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    res.json(results);
+  } catch (err) {
+    console.error("❌ Member Name search error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // ✅ Controller for male member search by name
 exports.searchMaleMembers = async (req, res) => {
   try {

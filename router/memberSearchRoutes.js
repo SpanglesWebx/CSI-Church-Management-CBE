@@ -1,10 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const { searchMembers, searchMembersById, searchMembersUnified, searchMaleMembers, searchMaleMembersById, searchFemaleMembers, searchFemaleMembersById, searchMarriedHusbands, getSpouse, searchMenFellowshipByName, searchMenFellowshipById, searchWomenFellowshipByName, searchWomenFellowshipById, searchYouthFellowshipByName, searchYouthFellowshipById, searchTeacherById, searchTeacherByName } = require("../controllers/memberSearchController");
+const { searchMembers, searchMembersById, searchMembersUnified, searchMaleMembers, searchMaleMembersById, searchFemaleMembers, searchFemaleMembersById, searchMarriedHusbands, getSpouse, searchMenFellowshipByName, searchMenFellowshipById, searchWomenFellowshipByName, searchWomenFellowshipById, searchYouthFellowshipByName, searchYouthFellowshipById, searchTeacherById, searchTeacherByName, searchMembersByName } = require("../controllers/memberSearchController");
 
 // ✅ New route for member search
 router.get("/", searchMembers);
 router.get("/by-id", searchMembersById);
+router.get("/by-name", searchMembersByName);
 router.get("/search", searchMembersUnified);
 
 // ✅ Male member search
