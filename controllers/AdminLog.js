@@ -173,14 +173,27 @@ exports.signupRequest = async (req, res) => {
     console.log("EMAIL_USER:", process.env.EMAIL_USER);
     console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
     // ================= EXISTING EMAIL OTP FLOW =================
+    // const transporter = nodemailer.createTransport({
+    //   host: "smtp.gmail.com",
+    //   port: 587,
+    //   secure: false,
+    //   auth: {
+    //     user: process.env.EMAIL_USER,
+    //     pass: process.env.EMAIL_PASS
+    //   },
+    //   tls: {
+    //     rejectUnauthorized: false
+    //   }
+    // });
     const transporter = nodemailer.createTransport({
-      // service: "gmail",
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    });
-
+  host: "node2.grabersites.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
     // Use PRIMARY EMAIL first
     const targetEmail = member.primary_email;
 
@@ -189,11 +202,30 @@ exports.signupRequest = async (req, res) => {
         message: "Primary Email not registered"
       });
 
+    // await transporter.sendMail({
+    //   from: process.env.EMAIL_USER,
+    //   to: targetEmail,
+    //   subject: "Church Management - Signup OTP",
+    //   text: `Hello ${member.member_name},\n\nYour OTP is: ${otp}\n\nThis OTP will expire in 3 minutes.`,
+    // });
+
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: `"CSI Christ Church" <${process.env.EMAIL_USER}>`,
       to: targetEmail,
-      subject: "Church Management - Signup OTP",
-      text: `Hello ${member.member_name},\n\nYour OTP is: ${otp}\n\nThis OTP will expire in 3 minutes.`,
+      subject: "CSI Christ Church - OTP Verification",
+      text: `Dear ${member.member_name},
+
+Your One Time Password (OTP) for the CSI Christ Church Portal is:
+
+${otp}
+
+This OTP will expire in 3 minutes.
+
+If you did not request this OTP, please ignore this email.
+
+Blessings,
+CSI Christ Church
+Coimbatore`
     });
 
     return res.json({
