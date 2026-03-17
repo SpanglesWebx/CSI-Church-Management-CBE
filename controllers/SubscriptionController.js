@@ -957,3 +957,105 @@ members.forEach(m => {
     res.status(500).json({ message: "Failed to fetch print data" });
   }
 };
+
+exports.reportByYear = async (req, res) => {
+  try {
+    const {
+      from,
+      to,
+      page = 1,
+      limit = 25,
+      search = "",
+      download = "false" // 🔥 for PDF full data
+    } = req.query;
+
+    // ✅ Validation
+    if (!from || !to) {
+      return res.status(400).json({ message: "From and To dates required" });
+    }
+
+    const start = new Date(from);
+    const end = new Date(to);
+
+    // ⚠️ Ensure end date includes full day
+    end.setHours(23, 59, 59, 999);
+
+    const months = [
+      "april","may","june","july","august","september",
+      "october","november","december","january","february","march"
+    ];
+
+    // ✅ Fetch all subscriptions
+    const subscriptions = await Subscription.find().lean();
+
+    let result = [];
+
+    for (const sub of subscriptions) {
+      let totalMonthlySub = 0;
+
+      for (const month of months) {
+        const record = sub[month];
+
+        if (record?.allocations?.length) {
+          for (const a of record.allocations) {
+            const allocDate = new Date(a.date);
+
+            if (allocDate >= start && allocDate <= end) {
+              totalMonthlySub += Number(a.monthlySubscriptionOffering || 0);
+            }
+          }
+        }
+      }
+
+      // ✅ Filter ≥ 240
+      if (totalMonthlySub >= 240) {
+
+        // 🔍 SEARCH FILTER
+        if (
+          search &&
+          !(
+            sub.member_id?.toLowerCase().includes(search.toLowerCase()) ||
+            sub.member_name?.toLowerCase().includes(search.toLowerCase())
+          )
+        ) {
+          continue;
+        }
+
+        result.push({
+          member_id: sub.member_id,
+          member_name: sub.member_name,
+          total: Number(totalMonthlySub.toFixed(2))
+        });
+      }
+    }
+
+    // ✅ Sort by member_id
+    result.sort((a, b) => a.member_id.localeCompare(b.member_id));
+
+    // 🔥 DOWNLOAD MODE → return full data (no pagination)
+    if (download === "true") {
+      return res.json({
+        data: result,
+        totalCount: result.length
+      });
+    }
+
+    // ✅ Pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const paginated = result.slice(skip, skip + parseInt(limit));
+
+    res.json({
+      data: paginated,
+      totalPages: Math.ceil(result.length / limit),
+      currentPage: parseInt(page),
+      totalCount: result.length
+    });
+
+  } catch (err) {
+    console.error("Report by year error:", err);
+    res.status(500).json({
+      message: "Failed to fetch report",
+      error: err.message
+    });
+  }
+};

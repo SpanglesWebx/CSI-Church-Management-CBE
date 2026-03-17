@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { addSubscription, getSubscribers, getMemberSubscriptions, checkSubscription, updateSubscriptionSplit, saveSubscriptionAmount, allocateToMonths, getUnpaidMembers, holdMembers, getHoldedMembers, getSubscriptionReport, getSingleSubscriptionReport,getPrintByDate  } = require("../controllers/SubscriptionController");
+const { addSubscription, getSubscribers, getMemberSubscriptions, checkSubscription, updateSubscriptionSplit, saveSubscriptionAmount, allocateToMonths, getUnpaidMembers, holdMembers, getHoldedMembers, getSubscriptionReport, getSingleSubscriptionReport,getPrintByDate, reportByYear  } = require("../controllers/SubscriptionController");
 
 // ➤ Add a new subscription
 router.post("/", addSubscription);
@@ -31,6 +31,8 @@ router.get("/report/print-by-date", getPrintByDate);
 // router.get("/report/view/:member_id", getSingleSubscriptionReport);
 // router.get("/report/view/:member_id(*)", getSingleSubscriptionReport);
 router.get("/report/view", getSingleSubscriptionReport);
+
+router.get("/report/year", reportByYear);
 
 
 
