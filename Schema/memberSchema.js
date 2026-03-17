@@ -126,5 +126,8 @@ const memberSchema = new mongoose.Schema({
 
 
 }, { timestamps: true });
+memberSchema.index({ member_id: 1 });
+memberSchema.index({ member_name: 1 });
+memberSchema.index({ primary_contact_number: 1 });
 
 module.exports = mongoose.model("Members", memberSchema);

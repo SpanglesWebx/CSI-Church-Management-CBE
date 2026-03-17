@@ -142,6 +142,13 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type","Authorization"]
 }));
+// 🚫 DISABLE CACHE FOR ALL API RESPONSES (CRITICAL FIX)
+app.use("/api", (req, res, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  next();
+});
 
 app.get("/", (req, res) => {
   res.send(" Server Running ");
