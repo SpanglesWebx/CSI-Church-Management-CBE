@@ -7,6 +7,6 @@ const {
 } = require("../controllers/sundaySclDashController");
 
 router.get("/", getSundaySchoolDashboard);
-router.get("/teacher/:teacherId", getTeacherDashboard);
+router.get("/teacher", getTeacherDashboard);
 
 module.exports = router;

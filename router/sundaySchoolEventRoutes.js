@@ -16,7 +16,7 @@ router.get("/eventby/all", controller.getAllEventBys);     // Get all Event Bys
 router.put("/update/:id", controller.updateEvent);
 
 // Events by teacher
-router.get("/teacher/:teacherId", controller.getEventsByTeacher);
+router.get("/teacher", controller.getEventsByTeacher);
 router.get("/:id", controller.getSundaySchoolEventById);
 
 // Participants routes

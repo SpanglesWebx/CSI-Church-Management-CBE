@@ -27,7 +27,7 @@ const Notification = require("../Schema/NotificationSchema");
 
 exports.getOfferingsByMember = async (req, res) => {
   try {
-    const { member_id } = req.params;
+    const { member_id } = req.query;
     if (!member_id) {
       return res.status(400).json({ error: "Member ID is required" });
     }
@@ -77,7 +77,7 @@ exports.getOfferingsByMember = async (req, res) => {
 
 exports.getMemberName = async (req, res) => {
   try {
-    const { member_id } = req.params;
+    const { member_id } = req.query;
 
     if (!member_id) {
       return res.status(400).json({ error: "Member ID is required" });
@@ -111,7 +111,7 @@ exports.getMemberName = async (req, res) => {
 
 exports.getFamilyIfHead = async (req, res) => {
   try {
-    const { memberId } = req.params;
+    const { memberId } = req.query;
 
     const member = await Member.findOne({ member_id: memberId });
 
@@ -181,10 +181,10 @@ exports.getFamilyIfHead = async (req, res) => {
 
 exports.getFamilyByMember = async (req, res) => {
   try {
-    const { memberId } = req.params;
+    const { memberId } = req.query;
 
     // Check if the member is head first
-    const familyAsHead = await Family.findOne({ head: memberId });
+    const familyAsHead = await Family.findOne({ "head.member_id": memberId });
     if (familyAsHead) {
       return res.status(200).json({
         isHead: true,
@@ -193,7 +193,7 @@ exports.getFamilyByMember = async (req, res) => {
     }
 
     // Else check if the member is part of any family
-    const familyAsMember = await Family.findOne({ "members.ref_id": memberId });
+    const familyAsMember = await Family.findOne({ "members.member_id": memberId });
     if (familyAsMember) {
       return res.status(200).json({
         isHead: false,
@@ -211,7 +211,7 @@ exports.getFamilyByMember = async (req, res) => {
 exports.getSubscriptionsByMember = async (req, res) => {
   try {
 
-    const member_id = decodeURIComponent(req.params.member_id);
+    const member_id = req.query.member_id;
 
     if (!member_id) {
       return res.status(400).json({ error: "Member ID is required" });
@@ -297,7 +297,7 @@ exports.getSubscriptionsByMember = async (req, res) => {
 exports.getSingleSubscriptionView = async (req, res) => {
   try {
 
-    const member_id = decodeURIComponent(req.params.member_id);
+    const member_id = req.query.member_id;
 
     const currentYear =
       new Date().getMonth() >= 3
@@ -338,7 +338,7 @@ exports.getSingleSubscriptionView = async (req, res) => {
 
 exports.getProfile = async (req, res) => {
   try {
-    const { memberId } = req.params;
+    const { memberId } = req.query;
 
     const member = await Member.findOne(
       { member_id: memberId },
@@ -362,7 +362,7 @@ exports.getProfile = async (req, res) => {
 
 exports.getDailyVerse = async (req, res) => {
   try {
-    const { memberId } = req.params;
+    const { memberId } = req.query;
 
     const today = new Date();
     const dayNumber = Math.floor(today.getTime() / (1000 * 60 * 60 * 24));
@@ -400,7 +400,7 @@ exports.getDailyVerse = async (req, res) => {
 
 exports.getMemberProfileFull = async (req, res) => {
   try {
-    const { memberId } = req.params;
+    const { memberId } = req.query;
 
     // 1️⃣ Fetch Member using member_id
     const member = await Member.findOne({ member_id: memberId });
@@ -455,7 +455,7 @@ exports.getMemberProfileFull = async (req, res) => {
 exports.getUpcomingDashboardItems = async (req, res) => {
   try {
 
-    const { memberId } = req.params;
+    const { memberId } = req.query;
 
     const member = await Member.findOne({ member_id: memberId });
 

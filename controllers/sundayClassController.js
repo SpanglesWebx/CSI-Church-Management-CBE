@@ -373,7 +373,7 @@ exports.getClassWithStudents = async (req, res) => {
 // ➤ Get all students for classes taught by a teacher
 exports.getStudentsByTeacher = async (req, res) => {
   try {
-    const { teacherId } = req.params;
+    const { teacherId } = req.query;
 
     // Find all classes taught by this teacher
     const classes = await SundayClass.find({ "teacher.member_id": teacherId });

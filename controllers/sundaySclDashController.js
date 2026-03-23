@@ -87,7 +87,7 @@ exports.getTeacherDashboard = async (req, res) => {
            GET TEACHER ID FROM PARAM
         ------------------------------ */
 
-        const { teacherId } = req.params;
+        const { teacherId } = req.query;
 
         if (!teacherId || teacherId === "null") {
             return res.status(400).json({

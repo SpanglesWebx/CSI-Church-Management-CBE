@@ -365,15 +365,11 @@ exports.updateMember = async (req, res) => {
     }
 
 
-    Object.keys(data).forEach(k => {
-      if (
-        data[k] === undefined ||
-        data[k] === null ||
-        (typeof data[k] === "string" && data[k].trim() === "")
-      ) {
-        delete data[k];
-      }
-    });
+Object.keys(data).forEach(k => {
+  if (data[k] === undefined || data[k] === null) {
+    delete data[k];
+  }
+});
 
 
     if (data.primary_contact_number) {

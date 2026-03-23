@@ -469,16 +469,15 @@ exports.login = async (req, res) => {
 
         console.log("LOGIN EMAIL OTP:", otpCode);
 
-        const transporter =
-          nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 465,
-            secure: true,
-            auth: {
-              user: process.env.EMAIL_USER,
-              pass: process.env.EMAIL_PASS
-            }
-          });
+const transporter = nodemailer.createTransport({
+  host: "node2.grabersites.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
         await transporter.sendMail({
 
@@ -688,11 +687,28 @@ exports.createUserByAdmin = async (req, res) => {
       return res.status(404).json({ message: "Member/Pastor not found" });
     }
 
-    // ✅ Check if user already exists
-    let existingUser = await User.findOne({ member_id });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists for this ID" });
-    }
+let existingUser = await User.findOne({ member_id });
+
+if (existingUser) {
+
+  // ✅ Merge roles (avoid duplicates)
+  const newRoles = Array.from(
+    new Set([
+      ...(existingUser.roles || []),
+      ...(roles || []),
+      "member" // always ensure member exists
+    ])
+  );
+
+  existingUser.roles = newRoles;
+
+  await existingUser.save();
+
+  return res.status(200).json({
+    message: "Roles updated successfully",
+    user: existingUser
+  });
+}
 
     // ✅ Always include "member" role
     const assignedRoles = Array.from(new Set(["member", ...(roles || [])]));

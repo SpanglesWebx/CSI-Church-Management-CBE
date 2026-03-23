@@ -8,7 +8,12 @@ exports.getMembersForLabel = async (req, res) => {
     const query = {
       status: "Active",
       membership_status: "Unhold",
+      // ✅ ONLY /1 members
+      member_id: { $regex: /\/1$/ }
     };
+
+
+    
 
     if (gender && gender !== "All") {
       query.gender = gender;

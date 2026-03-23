@@ -457,7 +457,7 @@ exports.updateEvent = async (req, res) => {
 
 exports.getEventsByTeacher = async (req, res) => {
   try {
-    const { teacherId } = req.params;
+    const { teacherId } = req.query;
     const { search = "", startDate, endDate, page = 1, limit = 25 } = req.query;
 
     // 1️⃣ Find all classes this teacher handles

@@ -484,7 +484,7 @@ exports.updateSundayExam = async (req, res) => {
 
 exports.getExamsByTeacher = async (req, res) => {
   try {
-    const { teacherId } = req.params;
+    const { teacherId } = req.query;
     const { search = "", startDate, endDate, page = 1, limit = 10 } = req.query;
 
     // 1️⃣ Find all classes this teacher handles

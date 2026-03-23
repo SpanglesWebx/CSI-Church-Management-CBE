@@ -26,7 +26,7 @@ router.get("/examby/all", getExamByList);
 
 router.put("/update/:id", updateSundayExam);
 
-router.get("/teacher/:teacherId", getExamsByTeacher);
+router.get("/teacher", getExamsByTeacher);
 
 router.post("/add-participants", addExamParticipants);
 

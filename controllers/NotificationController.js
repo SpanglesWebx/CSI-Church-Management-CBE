@@ -46,7 +46,7 @@ exports.getMemberNotifications = async (req, res) => {
 
   try {
 
-    const { memberId } = req.params;
+    const { memberId } = req.query;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);

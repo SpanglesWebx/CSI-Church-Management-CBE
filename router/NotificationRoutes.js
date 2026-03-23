@@ -19,7 +19,7 @@ router.put("/status/:id", updateNotificationStatus);
 
 router.put("/update/:id", updateNotification);
 
-router.get("/member/:memberId", getMemberNotifications);
+router.get("/member", getMemberNotifications);
 
 router.post("/seen", markSeen);
 

@@ -30,7 +30,7 @@ router.post("/:classId/students", sundayClassController.addStudentsToClass);
 router.get("/:classId/details", sundayClassController.getClassWithStudents);
 
 router.get(
-  "/teacher/:teacherId/students",
+  "/teacher/students",
   sundayClassController.getStudentsByTeacher 
 );
 
