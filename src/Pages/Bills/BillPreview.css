@@ -1,0 +1,25 @@
+@media print {
+  body {
+    background: white;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Hide UI elements during print */
+  .print\\:hidden, .sidebar, .navbar, .footer {
+    display: none !important;
+  }
+
+  /* Max width and alignment for printable area */
+  .print-area {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  @page {
+    size: A5 portrait; /* or A4 / Letter */
+    margin: 0.5in;
+  }
+}

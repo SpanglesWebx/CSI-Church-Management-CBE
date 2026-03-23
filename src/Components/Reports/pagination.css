@@ -1,0 +1,110 @@
+
+
+  /* pagination.css */
+.pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+   
+  }
+  
+  .page-item {
+    margin: 0 5px;
+  }
+  
+  .page-link {
+    display: block;
+    padding: 8px 16px;
+    text-decoration: none;
+    color: #8aaee0;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  
+  .page-link:hover {
+    background-color: #007bff60;
+    border-color: #dee2e6;
+    color: #fff;
+
+  }
+  
+  .active .page-link {
+    color: #fff;
+    background-color: #8aaee0;
+    /* border-color: #000000; */
+  }
+  
+  .previous, .next {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+
+  /* pagination.css */
+/* .truncated-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px; 
+  cursor: pointer;
+  position: relative;
+}
+
+.tooltip {
+  visibility: hidden;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 4px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 100%; 
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 5px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.truncated-text:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+} */
+/* pagination.css */
+.truncated-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px; 
+  cursor: pointer;
+  position: relative;
+}
+
+.tooltip {
+  display: none; /* Hide by default */
+  background-color: rgba(0, 0, 0, 0.911);
+  color: #fff;
+  text-align: center;
+  border-radius: 4px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 100%; /* Position above the text */
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 5px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  
+}
+
+.truncated-text:hover + .tooltip {
+  width: 300px; 
+  display: block;
+  visibility: visible;
+  opacity: 1;
+}

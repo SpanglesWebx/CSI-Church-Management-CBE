@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: "Roboto", sans-serif;
+  }
+  ul{
+    padding-left: 0px !important;
+  }
+  a{
+    text-decoration: none !important;
+  }
+}
+
+/* For WebKit browsers (Chrome, Safari, Edge) */
+* {
+  scrollbar-width: thin;            /* Firefox */
+  scrollbar-color: #5c95e0 transparent;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #5c95e0;
+  /* border-radius: 10px; */
+  border: none;
+}
+
+* {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
