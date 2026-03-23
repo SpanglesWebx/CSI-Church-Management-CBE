@@ -130,80 +130,228 @@ exports.addSubscription = async (req, res) => {
 };
 
 
+// exports.getSubscribers = async (req, res) => {
+//   try {
+//     const { search = "", page = 1, limit = 25 } = req.query;
+//     const skip = (parseInt(page) - 1) * parseInt(limit);
+
+//     const searchCond = search
+//       ? {
+//         $or: [
+//           { member_name: { $regex: search, $options: "i" } },
+//           { member_id: { $regex: search, $options: "i" } },
+//         ],
+//       }
+//       : {};
+
+//     const agg = await Subscription.aggregate([
+//       {
+//         $match: {
+//           remaining_amount: { $gt: 0 },
+//           ...searchCond,
+//         },
+//       },
+//       { $sort: { updatedAt: -1 } },
+//       {
+//         $group: {
+//           _id: "$member_id",
+//           member_id: { $first: "$member_id" },
+//           member_name: { $first: "$member_name" },
+//           year: { $first: "$year" },
+//           remaining_amount: { $first: "$remaining_amount" },
+//         },
+//       },
+//       {
+//         $lookup: {
+//           from: "members",
+//           localField: "member_id",
+//           foreignField: "member_id",
+//           as: "memberInfo",
+//         },
+//       },
+//       { $unwind: { path: "$memberInfo", preserveNullAndEmptyArrays: true } },
+//       {
+//         $project: {
+//           _id: 0,
+//           member_id: 1,
+//           member_name: 1,
+//           year: 1,
+//           remaining_amount: 1,
+//           member_type: "$memberInfo.member_type",
+//         },
+//       },
+//       { $sort: { member_id: 1 } },
+//       {
+//         $facet: {
+//           data: [{ $skip: skip }, { $limit: parseInt(limit) }],
+//           totalCount: [{ $count: "count" }],
+//         },
+//       },
+//     ]);
+
+//     const subscribers = agg[0].data || [];
+//     const totalCount = agg[0].totalCount.length ? agg[0].totalCount[0].count : 0;
+
+//     return res.json({
+//       subscribers,
+//       totalPages: Math.ceil(totalCount / parseInt(limit)),
+//       currentPage: parseInt(page),
+//       totalCount,
+//     });
+//   } catch (err) {
+//     console.error("Get Subscribers error:", err);
+//     return res.status(500).json({ message: "Failed to fetch subscribers", error: err.message });
+//   }
+// };
+
+
 exports.getSubscribers = async (req, res) => {
   try {
-    const { search = "", page = 1, limit = 25 } = req.query;
+    const {
+      search = "",
+      page = 1,
+      limit = 25,
+      date,
+      session
+    } = req.query;
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
+    // 🔍 Search condition
     const searchCond = search
       ? {
-        $or: [
-          { member_name: { $regex: search, $options: "i" } },
-          { member_id: { $regex: search, $options: "i" } },
-        ],
-      }
+          $or: [
+            { member_name: { $regex: search, $options: "i" } },
+            { member_id: { $regex: search, $options: "i" } },
+          ],
+        }
       : {};
+
+    // 📅 Date filter
+    let dateMatch = {};
+    if (date) {
+      const start = new Date(date);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(date);
+      end.setHours(23, 59, 59, 999);
+
+      dateMatch = {
+        "receipts.date": { $gte: start, $lte: end },
+      };
+    }
+
+    // 🕐 Session filter
+    let sessionMatch = {};
+    if (session && session !== "All") {
+      sessionMatch = {
+        "receipts.payment_session": session,
+      };
+    }
 
     const agg = await Subscription.aggregate([
       {
         $match: {
-          remaining_amount: { $gt: 0 },
           ...searchCond,
         },
       },
-      { $sort: { updatedAt: -1 } },
+
+      // 🔥 explode receipts
+      { $unwind: "$receipts" },
+
       {
-        $group: {
-          _id: "$member_id",
-          member_id: { $first: "$member_id" },
-          member_name: { $first: "$member_name" },
-          year: { $first: "$year" },
-          remaining_amount: { $first: "$remaining_amount" },
+        $match: {
+          ...dateMatch,
+          ...sessionMatch,
         },
       },
-      {
-        $lookup: {
-          from: "members",
-          localField: "member_id",
-          foreignField: "member_id",
-          as: "memberInfo",
-        },
-      },
-      { $unwind: { path: "$memberInfo", preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          _id: 0,
-          member_id: 1,
-          member_name: 1,
-          year: 1,
-          remaining_amount: 1,
-          member_type: "$memberInfo.member_type",
-        },
-      },
-      { $sort: { member_id: 1 } },
+
       {
         $facet: {
-          data: [{ $skip: skip }, { $limit: parseInt(limit) }],
-          totalCount: [{ $count: "count" }],
+          // 🔹 Member list (table)
+          data: [
+            {
+              $group: {
+                _id: "$member_id",
+                member_id: { $first: "$member_id" },
+                member_name: { $first: "$member_name" },
+                year: { $first: "$year" },
+              },
+            },
+            { $sort: { member_id: 1 } },
+            { $skip: skip },
+            { $limit: parseInt(limit) },
+          ],
+
+          // 🔹 Total count
+          totalCount: [
+            {
+              $group: {
+                _id: "$member_id",
+              },
+            },
+            { $count: "count" },
+          ],
+
+          // 🔥 🔥 SUMMARY (THIS IS WHAT YOU WANT)
+          summary: [
+            {
+              $group: {
+                _id: null,
+
+                totalCash: {
+                  $sum: {
+                    $cond: [
+                      { $eq: ["$receipts.payment_method", "Cash"] },
+                      "$receipts.amount",
+                      0,
+                    ],
+                  },
+                },
+
+                totalCheque: {
+                  $sum: {
+                    $cond: [
+                      { $eq: ["$receipts.payment_method", "Cheque"] },
+                      "$receipts.amount",
+                      0,
+                    ],
+                  },
+                },
+
+                grandTotal: { $sum: "$receipts.amount" },
+              },
+            },
+          ],
         },
       },
     ]);
 
-    const subscribers = agg[0].data || [];
-    const totalCount = agg[0].totalCount.length ? agg[0].totalCount[0].count : 0;
+    const subscribers = agg[0]?.data || [];
+    const totalCount =
+      agg[0]?.totalCount?.length > 0 ? agg[0].totalCount[0].count : 0;
+
+    const summary = agg[0]?.summary?.[0] || {
+      totalCash: 0,
+      totalCheque: 0,
+      grandTotal: 0,
+    };
 
     return res.json({
       subscribers,
       totalPages: Math.ceil(totalCount / parseInt(limit)),
       currentPage: parseInt(page),
       totalCount,
+      summary, // 🔥 important
     });
   } catch (err) {
-    console.error("Get Subscribers error:", err);
-    return res.status(500).json({ message: "Failed to fetch subscribers", error: err.message });
+    console.error("Get Subscribers Error:", err);
+    res.status(500).json({
+      message: "Error fetching subscribers",
+      error: err.message,
+    });
   }
 };
-
 
 // ➤ Get all subscriptions for a member (Apr–Mar for selected year)
 exports.getMemberSubscriptions = async (req, res) => {
